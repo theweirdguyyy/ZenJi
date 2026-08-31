@@ -1,0 +1,89 @@
+/* ZENJI NEO KAGE — Design Tokens */
+
+:root {
+  /* Core Raw Color Tokens */
+  --color-void: #070707;
+  --color-ink: #111111;
+  --color-paper: #F4F1EA;
+  --color-crimson: #E3261A;
+  --color-ember: #FF5A36;
+  --color-mist: #A8A8A8;
+  --color-white: #FFFFFF;
+
+  /* Semantic Color Tokens */
+  --color-bg-primary: var(--color-void);
+  --color-bg-surface: var(--color-ink);
+  --color-bg-elevated: #181818;
+  --color-bg-light: var(--color-paper);
+  --color-bg-overlay: rgba(7, 7, 7, 0.85);
+
+  --color-text-primary: var(--color-white);
+  --color-text-secondary: var(--color-mist);
+  --color-text-muted: #666666;
+  --color-text-inverse: var(--color-void);
+
+  --color-border-subtle: #222222;
+  --color-border-strong: #333333;
+  --color-border-accent: var(--color-crimson);
+  --color-border-light: #E0DDD5;
+
+  --color-accent-primary: var(--color-crimson);
+  --color-accent-hover: #C81E13;
+  --color-accent-highlight: var(--color-ember);
+
+  --color-focus: var(--color-crimson);
+
+  /* Spacing Scale */
+  --space-1: 0.25rem;  /* 4px */
+  --space-2: 0.5rem;   /* 8px */
+  --space-3: 0.75rem;  /* 12px */
+  --space-4: 1rem;     /* 16px */
+  --space-5: 1.25rem;  /* 20px */
+  --space-6: 1.5rem;   /* 24px */
+  --space-8: 2rem;     /* 32px */
+  --space-10: 2.5rem;  /* 40px */
+  --space-12: 3rem;    /* 48px */
+  --space-16: 4rem;    /* 64px */
+  --space-20: 5rem;    /* 80px */
+  --space-24: 6rem;    /* 96px */
+
+  /* Border Radii — Restrained & Technical */
+  --radius-none: 0px;
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --radius-full: 9999px;
+
+  /* Shadows & Glow Effects */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 12px 0 rgba(0, 0, 0, 0.7);
+  --shadow-lg: 0 10px 30px 0 rgba(0, 0, 0, 0.9);
+  --shadow-glow-crimson: 0 0 20px rgba(227, 38, 26, 0.35);
+
+  /* Z-Index Scale */
+  --z-negative: -1;
+  --z-normal: 1;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-fixed: 300;
+  --z-modal-backdrop: 400;
+  --z-modal: 500;
+  --z-toast: 600;
+
+  /* Transition Durations & Easings */
+  --timing-fast: 150ms;
+  --timing-normal: 200ms;
+  --timing-slow: 350ms;
+  --ease-default: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-fast: var(--timing-fast) var(--ease-default);
+  --transition-normal: var(--timing-normal) var(--ease-default);
+  --transition-slow: var(--timing-slow) var(--ease-default);
+
+  /* Container Widths */
+  --container-sm: 640px;
+  --container-md: 768px;
+  --container-lg: 1024px;
+  --container-xl: 1280px;
+  --container-2xl: 1440px;
+}
