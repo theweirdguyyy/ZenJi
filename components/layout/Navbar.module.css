@@ -4,8 +4,8 @@
   left: 0;
   right: 0;
   z-index: var(--z-sticky);
-  background-color: rgba(7, 7, 7, 0.92);
-  backdrop-filter: blur(8px);
+  background-color: rgba(7, 7, 7, 0.95);
+  backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--color-border-subtle);
   transition: background-color var(--transition-normal);
 }
@@ -25,7 +25,7 @@
   color: var(--color-white);
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: 4px;
 }
 
 .logoDot {
@@ -33,6 +33,7 @@
   height: 6px;
   background-color: var(--color-crimson);
   display: inline-block;
+  border-radius: 50%;
 }
 
 .navLinks {
@@ -56,16 +57,31 @@
   text-transform: uppercase;
   color: var(--color-mist);
   transition: color var(--transition-fast);
+  padding: var(--space-1) 0;
 }
 
 .navLink:hover {
   color: var(--color-white);
 }
 
+.navLinkActive {
+  color: var(--color-crimson);
+}
+
+.activeIndicator {
+  position: absolute;
+  bottom: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 16px;
+  height: 2px;
+  background-color: var(--color-crimson);
+}
+
 .controls {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-4);
 }
 
 .cartButton {
