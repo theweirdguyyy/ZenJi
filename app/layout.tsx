@@ -5,6 +5,8 @@ import { AnnouncementBar } from "@/components/layout/AnnouncementBar";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { MobileMenu } from "@/components/layout/MobileMenu";
+import { CartDrawer } from "@/components/layout/CartDrawer";
+import { ProfileModal } from "@/components/layout/ProfileModal";
 import { ToastContainer } from "@/components/common/Toast";
 
 // Font Abstraction Setup via Google Fonts
@@ -56,6 +58,8 @@ export default function RootLayout({
         <AnnouncementBar />
         <Navbar />
         <MobileMenu />
+        <CartDrawer />
+        <ProfileModal />
         <main id="main-content">{children}</main>
         <Footer />
         <ToastContainer />

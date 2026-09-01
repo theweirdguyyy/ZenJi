@@ -1,36 +1,35 @@
 import React from "react";
 import { cn } from "@/lib/utils";
+import styles from "./Container.module.css";
 
 export interface ContainerProps extends React.HTMLAttributes<HTMLDivElement> {
   size?: "sm" | "md" | "lg" | "xl" | "2xl" | "full";
 }
 
-export const Container: React.FC<ContainerProps> = ({ children, size = "2xl", className, style, ...props }) => {
-  const maxWidth =
+export const Container: React.FC<ContainerProps> = ({
+  children,
+  size = "2xl",
+  className,
+  style,
+  ...props
+}) => {
+  const sizeClass =
     size === "sm"
-      ? "var(--container-sm)"
+      ? styles.containerSm
       : size === "md"
-      ? "var(--container-md)"
+      ? styles.containerMd
       : size === "lg"
-      ? "var(--container-lg)"
+      ? styles.containerLg
       : size === "xl"
-      ? "var(--container-xl)"
+      ? styles.containerXl
       : size === "2xl"
-      ? "var(--container-2xl)"
-      : "100%";
+      ? styles.container2xl
+      : styles.containerFull;
 
   return (
     <div
-      className={cn(className)}
-      style={{
-        width: "100%",
-        maxWidth,
-        marginLeft: "auto",
-        marginRight: "auto",
-        paddingLeft: "var(--space-4)",
-        paddingRight: "var(--space-4)",
-        ...style
-      }}
+      className={cn(styles.container, sizeClass, className)}
+      style={style}
       {...props}
     >
       {children}
@@ -42,24 +41,26 @@ export interface SectionProps extends React.HTMLAttributes<HTMLElement> {
   padding?: "none" | "sm" | "md" | "lg";
 }
 
-export const Section: React.FC<SectionProps> = ({ children, padding = "md", className, style, ...props }) => {
-  const paddingVertical =
+export const Section: React.FC<SectionProps> = ({
+  children,
+  padding = "md",
+  className,
+  style,
+  ...props
+}) => {
+  const paddingClass =
     padding === "none"
-      ? "0"
+      ? styles.sectionNone
       : padding === "sm"
-      ? "var(--space-8)"
+      ? styles.sectionSm
       : padding === "lg"
-      ? "var(--space-20)"
-      : "var(--space-12)";
+      ? styles.sectionLg
+      : styles.sectionMd;
 
   return (
     <section
-      className={cn(className)}
-      style={{
-        paddingTop: paddingVertical,
-        paddingBottom: paddingVertical,
-        ...style
-      }}
+      className={cn(styles.section, paddingClass, className)}
+      style={style}
       {...props}
     >
       {children}
@@ -71,17 +72,16 @@ export interface DividerProps extends React.HTMLAttributes<HTMLDivElement> {
   accent?: boolean;
 }
 
-export const Divider: React.FC<DividerProps> = ({ accent = false, className, style, ...props }) => {
+export const Divider: React.FC<DividerProps> = ({
+  accent = false,
+  className,
+  style,
+  ...props
+}) => {
   return (
     <div
-      className={cn(className)}
-      style={{
-        height: "1px",
-        backgroundColor: accent ? "var(--color-crimson)" : "var(--color-border-subtle)",
-        width: "100%",
-        margin: "var(--space-6) 0",
-        ...style
-      }}
+      className={cn(styles.divider, accent && styles.dividerAccent, className)}
+      style={style}
       {...props}
     />
   );

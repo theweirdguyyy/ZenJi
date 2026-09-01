@@ -12,12 +12,13 @@ export interface AccordionItem {
 
 export interface AccordionProps {
   items: AccordionItem[];
+  defaultOpenIds?: string[];
   allowMultiple?: boolean;
   className?: string;
 }
 
-export const Accordion: React.FC<AccordionProps> = ({ items, allowMultiple = false, className }) => {
-  const [openIds, setOpenIds] = useState<string[]>([]);
+export const Accordion: React.FC<AccordionProps> = ({ items, defaultOpenIds = [], allowMultiple = false, className }) => {
+  const [openIds, setOpenIds] = useState<string[]>(defaultOpenIds);
 
   const toggleItem = (id: string) => {
     if (allowMultiple) {

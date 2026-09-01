@@ -43,7 +43,7 @@ export interface Product {
   gsm?: number;
   fit?: string;
   careInstructions?: string;
-  badges?: ("NEW" | "LIMITED" | "SALE" | "RESTOCK")[];
+  badges?: ("NEW" | "LIMITED" | "SALE" | "RESTOCK" | "ORIGIN DROP" | "NEW ARRIVAL" | (string & {}))[];
   stock: number;
   rating: number;
   reviewCount: number;
