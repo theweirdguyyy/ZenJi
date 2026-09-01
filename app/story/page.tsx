@@ -254,7 +254,7 @@ export default function StoryPage() {
       </div>
 
       {/* ── BRAND PILLARS / JOURNEY SECTION ─────────────────────────── */}
-      <section
+       {/* <section
         id="journey"
         style={{
           width: "100%",
@@ -335,7 +335,7 @@ export default function StoryPage() {
             </p>
           </div>
 
-          {/* Pillars Grid */}
+          
           <div
             style={{
               display: "grid",
@@ -360,7 +360,7 @@ export default function StoryPage() {
                     overflow: "hidden"
                   }}
                 >
-                  {/* Crimson Top Edge */}
+                  
                   <div
                     style={{
                       position: "absolute",
@@ -437,7 +437,7 @@ export default function StoryPage() {
             })}
           </div>
         </Container>
-      </section>
+      </section> */}
 
       {/* ── MANIFESTO BANNER CTA ────────────────────────────────────── */}
       <section
