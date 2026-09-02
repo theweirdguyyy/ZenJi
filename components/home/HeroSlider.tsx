@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Container } from "@/components/common/Container";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -18,7 +19,7 @@ interface SlideInfo {
 const SLIDES: SlideInfo[] = [
   {
     id: 1,
-    bgImage: "/Hero_Background.png",
+    bgImage: "/Hero_bg-1.png",
     titlePart1: "WEAR \nTHE ",
     titleHighlight: "LEGEND",
     subtitle: "Anime inspired. Streetwear redefined. Limited drops.",
@@ -27,10 +28,28 @@ const SLIDES: SlideInfo[] = [
   },
   {
     id: 2,
-    bgImage: "/hero_bg2.png",
+    bgImage: "/Hero_bg-3.png",
     titlePart1: "ZENJI \n",
     titleHighlight: "MINDSET",
     subtitle: "Not just a name. It's a mindset. Limited drops.",
+    buttonText: "EXPLORE DROP",
+    buttonHref: "/collection"
+  },
+  {
+    id: 3,
+    bgImage: "/Hero_bg-2.png",
+    titlePart1: "SHADOW \nCLAN ",
+    titleHighlight: "REIGN",
+    subtitle: "Forged in darkness. Worn with honor. Exclusive pieces.",
+    buttonText: "EXPLORE DROP",
+    buttonHref: "/collection"
+  },
+  {
+    id: 4,
+    bgImage: "/Hero_bg-4.png",
+    titlePart1: "UNLEASH \nTHE ",
+    titleHighlight: "SPIRIT",
+    subtitle: "Heavyweight craft meets futuristic cyber-streetwear.",
     buttonText: "EXPLORE DROP",
     buttonHref: "/collection"
   }
@@ -41,13 +60,13 @@ export const HeroSlider: React.FC = () => {
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const touchStartX = useRef<number | null>(null);
 
-  // Auto-play timer: cycles every 7 seconds when user is not hovering
+  // Auto-play timer: cycles every 6 seconds when not hovering
   useEffect(() => {
     if (isPaused) return;
 
     const timer = setInterval(() => {
       setCurrentSlideIndex((prev) => (prev + 1) % SLIDES.length);
-    }, 7000);
+    }, 6000);
 
     return () => clearInterval(timer);
   }, [isPaused]);
@@ -90,7 +109,7 @@ export const HeroSlider: React.FC = () => {
         position: "relative",
         width: "100%",
         minHeight: "calc(100vh - 64px)",
-        backgroundColor: "#070707",
+        backgroundColor: "#050505",
         overflow: "hidden",
         display: "flex",
         alignItems: "center",
@@ -98,7 +117,7 @@ export const HeroSlider: React.FC = () => {
         paddingBottom: "var(--space-16)"
       }}
     >
-      {/* Background Image Layers with Smooth Crossfade */}
+      {/* Background Image Layers with Smooth Crossfade and Identical Sizing/Positioning */}
       {SLIDES.map((slide, idx) => {
         const isActive = idx === currentSlideIndex;
         return (
@@ -107,21 +126,58 @@ export const HeroSlider: React.FC = () => {
             style={{
               position: "absolute",
               inset: 0,
-              backgroundImage: `url('${slide.bgImage}')`,
-              backgroundSize: "cover",
-              backgroundPosition: "center top",
               opacity: isActive ? 1 : 0,
-              transition: "opacity 0.75s cubic-bezier(0.4, 0, 0.2, 1)",
+              transition: "opacity 0.9s cubic-bezier(0.4, 0, 0.2, 1)",
               zIndex: 1,
               pointerEvents: "none"
             }}
-          />
+          >
+            <Image
+              src={slide.bgImage}
+              alt={slide.titleHighlight}
+              fill
+              priority
+              unoptimized
+              style={{
+                objectFit: "cover",
+                objectPosition: "center center",
+                width: "100%",
+                height: "100%"
+              }}
+              sizes="100vw"
+            />
+            {/* Dark gradient overlay behind the text area for maximum title visibility */}
+            {/* <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                background:
+                  "linear-gradient(-5deg, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.68) 35%, rgba(0,0,0,0.3) 65%, rgba(0,0,0,0.05) 100%)",
+                pointerEvents: "none"
+              }}
+            /> */}
+          </div>
         );
       })}
 
       {/* Main Content Area: Perfectly Identical Coordinates and Layout */}
       <Container size="full" style={{ position: "relative", zIndex: 5 }}>
-        <div style={{ maxWidth: "600px", position: "relative" }}>
+        <div style={{ maxWidth: "620px", position: "relative" }}>
+          {/* Subtle radial dark glow behind the text block */}
+          <div
+            style={{
+              position: "absolute",
+              top: "-40px",
+              left: "-60px",
+              right: "-40px",
+              bottom: "-40px",
+              background: "radial-gradient(ellipse at 30% 40%, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.35) 50%, rgba(0,0,0,0) 80%)",
+              pointerEvents: "none",
+              zIndex: -1,
+              filter: "blur(20px)"
+            }}
+          />
+
           {/* Slide Text Content Container */}
           <div style={{ position: "relative", minHeight: "260px" }}>
             {SLIDES.map((slide, idx) => {
@@ -135,10 +191,10 @@ export const HeroSlider: React.FC = () => {
                     left: 0,
                     right: 0,
                     opacity: isActive ? 1 : 0,
-                    transform: isActive ? "translateY(0)" : "translateY(8px)",
+                    transform: isActive ? "translateY(0)" : "translateY(10px)",
                     pointerEvents: isActive ? "auto" : "none",
                     transition:
-                      "opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)"
+                      "opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)"
                   }}
                 >
                   <h1
@@ -151,11 +207,20 @@ export const HeroSlider: React.FC = () => {
                       marginBottom: "var(--space-6)",
                       textTransform: "uppercase",
                       color: "var(--color-white)",
-                      whiteSpace: "pre-line"
+                      whiteSpace: "pre-line",
+                      textShadow:
+                        "0 4px 28px rgba(0,0,0,0.95), 0 2px 10px rgba(0,0,0,0.85), 0 0 40px rgba(0,0,0,0.7)"
                     }}
                   >
                     {slide.titlePart1}
-                    <span style={{ color: "var(--color-crimson)", fontStyle: "italic" }}>
+                    <span
+                      style={{
+                        color: "var(--color-crimson)",
+                        fontStyle: "italic",
+                        textShadow:
+                          "0 4px 28px rgba(0,0,0,0.95), 0 2px 10px rgba(0,0,0,0.85), 0 0 20px rgba(227,38,26,0.3)"
+                      }}
+                    >
                       {slide.titleHighlight}
                     </span>
                   </h1>
@@ -167,7 +232,8 @@ export const HeroSlider: React.FC = () => {
                       color: "var(--color-mist)",
                       marginBottom: "var(--space-8)",
                       lineHeight: 1.5,
-                      maxWidth: "480px"
+                      maxWidth: "480px",
+                      textShadow: "0 2px 12px rgba(0,0,0,0.9)"
                     }}
                   >
                     {slide.subtitle}
@@ -188,7 +254,8 @@ export const HeroSlider: React.FC = () => {
                         borderRadius: "2px",
                         textDecoration: "none",
                         transition: "opacity 0.2s, transform 0.15s ease",
-                        textTransform: "uppercase"
+                        textTransform: "uppercase",
+                        boxShadow: "0 4px 20px rgba(227,38,26,0.35)"
                       }}
                     >
                       {slide.buttonText}
@@ -199,7 +266,7 @@ export const HeroSlider: React.FC = () => {
             })}
           </div>
 
-          {/* Slider Indicators & Navigation Controls (Fixed Location) */}
+          {/* Slider Indicators & Navigation Controls */}
           <div
             style={{
               display: "flex",
@@ -220,7 +287,7 @@ export const HeroSlider: React.FC = () => {
               0{currentSlideIndex + 1}
             </span>
 
-            {/* Clickable Indicator Bars */}
+            {/* Clickable Indicator Bars for all 4 slides */}
             <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
               {SLIDES.map((slide, idx) => {
                 const isActive = idx === currentSlideIndex;
@@ -238,7 +305,7 @@ export const HeroSlider: React.FC = () => {
                       border: "none",
                       cursor: "pointer",
                       padding: 0,
-                      transition: "backgroundColor 0.3s ease, transform 0.2s ease"
+                      transition: "background-color 0.3s ease, transform 0.2s ease"
                     }}
                   />
                 );
