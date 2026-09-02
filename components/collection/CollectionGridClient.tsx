@@ -50,126 +50,246 @@ export const CollectionGridClient: React.FC<CollectionGridClientProps> = ({ prod
 
   return (
     <div style={{ backgroundColor: "var(--color-void)", color: "var(--color-white)", minHeight: "100vh" }}>
-      {/* ── 1. HERO BANNER (Exact Match to Reference Image) ──────────── */}
+      {/* ── 1. HERO BANNER ─────────────────────────────────────────────── */}
       <section
         style={{
           position: "relative",
           width: "100%",
-          aspectRatio: "1672 / 941",
-          minHeight: "clamp(340px, 56.28vw, 940px)",
+          height: "120vh",
           backgroundColor: "#070707",
           overflow: "hidden",
           display: "flex",
-          alignItems: "flex-end"
+          flexDirection: "column",
+          justifyContent: "space-between"
         }}
       >
-        {/* Full-width, uncropped background image */}
-        <Image
-          src="/Collection_background.png"
-          alt="T-Shirt Collection"
-          fill
-          priority
-          unoptimized
-          style={{
-            objectFit: "cover",
-            objectPosition: "center center",
-            width: "100%",
-            height: "100%"
-          }}
-          sizes="100vw"
-        />
-
-        {/* Subtle atmospheric vignette to preserve the exact contrast behind lower-left text */}
+        {/* Background Image Container — 80% height with gradient fade at bottom */}
         <div
           style={{
             position: "absolute",
-            inset: 0,
-            background:
-              "linear-gradient(to top right, rgba(0, 0, 0, 0.82) 0%, rgba(0, 0, 0, 0.5) 30%, rgba(0, 0, 0, 0.15) 55%, transparent 75%)",
-            pointerEvents: "none"
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            overflow: "hidden"
           }}
-        />
+        >
+          <Image
+            src="/Collection_background.png"
+            alt="Collection"
+            fill
+            priority
+            unoptimized
+            style={{
+              objectFit: "cover",
+              objectPosition: "center center"
+            }}
+            sizes="100vw"
+          />
+          {/* Gradient fade at bottom of image to blend into dark background */}
+          <div
+            style={{
+              position: "absolute",
+              bottom: 0,
+              left: 0,
+              width: "100%",
+              height: "35%",
+              background: "linear-gradient(to bottom, transparent 0%, #070707 100%)",
+              pointerEvents: "none"
+            }}
+          />
+        </div>
 
-        {/* Lower-left Content matching Reference Image */}
+
+
+
+
+
+
+        {/* ── 2 & 3. MAIN TEXT BLOCK (Anton Display Font Overlaying on the Model) ── */}
         <div
           style={{
             position: "relative",
             zIndex: 3,
-            width: "100%",
-            paddingBottom: "clamp(24px, 5vw, 64px)",
-            paddingLeft: "clamp(20px, 4vw, 56px)",
-            paddingRight: "clamp(20px, 4vw, 56px)"
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            paddingLeft: "clamp(20px, 4.5vw, 64px)",
+            paddingTop: "clamp(18px, 2.5vw, 36px)"
           }}
         >
-          <div style={{ maxWidth: "560px" }}>
-            {/* Main Heading: T-SHIRT COLLECTION */}
-            <h1
-              className="font-display"
+          {/* Supertitle tag */}
+          <p
+            className="font-ui"
+            style={{
+              fontSize: "clamp(20.5px, 0.75vw, 11px)",
+              fontWeight: 800,
+              letterSpacing: "2.2px",
+              textTransform: "uppercase",
+              color: "#c81010",
+              marginBottom: "clamp(4px, 0.5vw, 8px)",
+              lineHeight: 1.3
+            }}
+          >
+            LIMITED QUANTITIES.<br />TIMELESS LEGENDS.
+          </p>
+
+          {/* 2. COLLECTION Headline — Rusty Weathered Editorial Typography */}
+          <h1
+            style={{
+              fontFamily: "var(--font-anton)",
+              fontSize: "clamp(56px, 8.8vw, 136px)",
+              fontWeight: 400,
+              lineHeight: 0.85,
+              letterSpacing: "0.000001em",
+              textTransform: "uppercase",
+              display: "inline-block",
+              transform: "scaleX(0.72)",
+              transformOrigin: "left center",
+              marginBottom: "clamp(10px, 1.2vw, 16px)",
+              whiteSpace: "nowrap",
+              backgroundImage: "url('/rusty_white_surface.jpg')",
+              backgroundPosition: "center",
+              backgroundSize: "cover",
+              backgroundRepeat: "no-repeat",
+              WebkitBackgroundClip: "text",
+              backgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              color: "transparent",
+              filter: "contrast(1.2) brightness(1.1) drop-shadow(0 2px 10px rgba(0, 0, 0, 0.85)) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.95))"
+            }}
+          >
+            COLLECTION
+          </h1>
+
+          {/* 3. Subtitle paragraph */}
+          <p
+            className="font-ui"
+            style={{
+              fontSize: "clamp(10.99px, 0.75vw, 11px)",
+              color: "rgba(255, 255, 255, 0.9)",
+              lineHeight: 1.5,
+              marginBottom: "clamp(12px, 1.4vw, 18px)",
+              maxWidth: "280px",
+              textShadow: "0 2px 10px rgba(0,0,0,0.9)",
+              textTransform: "uppercase",
+              letterSpacing: "0.8px",
+              fontWeight: 600
+            }}
+          >
+            Anime inspired. Streetwear redefined.<br />
+            Find your next{" "}
+            <span style={{ color: "#c81010", fontWeight: 800 }}>OBSESSION.</span>
+          </p>
+
+          {/* 4. CTA Button */}
+          <div>
+            <button
+              type="button"
+              onClick={scrollToCatalog}
               style={{
-                fontSize: "clamp(34px, 5.2vw, 76px)",
-                fontWeight: 900,
-                lineHeight: 0.95,
-                letterSpacing: "1.5px",
-                textTransform: "uppercase",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "10px",
+                padding: "clamp(9px, 1vw, 13px) clamp(16px, 1.8vw, 24px)",
+                backgroundColor: "rgba(237, 16, 16, 0.97)",
+                border: "1px solid rgba(237, 16, 16, 0.97)",
                 color: "var(--color-white)",
-                marginBottom: "clamp(12px, 1.4vw, 18px)",
-                textShadow: "0 4px 28px rgba(0,0,0,0.95), 0 2px 10px rgba(0,0,0,0.85)"
+                fontFamily: "var(--font-ui)",
+                fontSize: "clamp(10px, 0.9vw, 12px)",
+                fontWeight: 700,
+                marginBottom: "clamp(12px, 2vw, 24px)",
+                letterSpacing: "2px",
+                textTransform: "uppercase",
+                cursor: "pointer",
+                transition: "all 0.25s ease"
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "rgba(5, 5, 5, 0.97)";
+                e.currentTarget.style.borderColor = "rgba(237, 16, 16, 0.97)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "rgba(237, 16, 16, 0.97)";
+                e.currentTarget.style.borderColor = "rgba(237, 16, 16, 0.97)";
               }}
             >
-              T-SHIRT<br />COLLECTION
-            </h1>
-
-            {/* Subtitle */}
-            <p
-              className="font-body"
-              style={{
-                fontSize: "clamp(13px, 1.25vw, 16px)",
-                color: "rgba(255, 255, 255, 0.88)",
-                lineHeight: 1.45,
-                marginBottom: "clamp(16px, 2vw, 24px)",
-                maxWidth: "420px",
-                textShadow: "0 2px 12px rgba(0,0,0,0.9)"
-              }}
-            >
-              Anime inspired. Streetwear redefined.<br />Find your next obsession.
-            </p>
-
-            {/* CTA Button: Outlined box with chevron */}
-            <div>
-              <button
-                type="button"
-                onClick={scrollToCatalog}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "10px",
-                  padding: "clamp(9px, 1vw, 13px) clamp(16px, 1.8vw, 24px)",
-                  backgroundColor: "rgba(237, 16, 16, 0.97)",
-                  border: "1px solid rgba(237, 16, 16, 0.97)",
-                  color: "var(--color-white)",
-                  fontFamily: "var(--font-ui)",
-                  fontSize: "clamp(10px, 0.9vw, 12px)",
-                  fontWeight: 700,
-                  marginBottom: "clamp(260px, 2vw, 24px)",
-                  letterSpacing: "2px",
-                  textTransform: "uppercase",
-                  cursor: "pointer",
-                  transition: "all 0.25s ease"
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "rgba(5, 5, 5, 0.97)";
-                  e.currentTarget.style.borderColor = "rgba(237, 16, 16, 0.97)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "rgba(237, 16, 16, 0.97)";
-                  e.currentTarget.style.borderColor = "rgba(237, 16, 16, 0.97)";
-                }}
-              >
-                SHOP COLLECTION <ChevronRight size={13} />
-              </button>
-            </div>
+              SHOP COLLECTION <ChevronRight size={13} />
+            </button>
           </div>
         </div>
+
+        {/* ── 5. BACKGROUND WATERMARK (Low Opacity Vertical Japanese Text) ── */}
+        <div
+          style={{
+            position: "absolute",
+            bottom: "clamp(48px, 6.5vw, 70px)",
+            left: "clamp(20px, 4.5vw, 62px)",
+            zIndex: 2,
+            userSelect: "none",
+            pointerEvents: "none"
+          }}
+        >
+          <div
+            style={{
+              fontSize: "clamp(24px, 4vw, 54px)",
+              fontWeight: 900,
+              color: "rgba(255, 255, 255, 0.055)",
+              lineHeight: 1.1,
+              fontFamily: "serif",
+              letterSpacing: "2px"
+            }}
+          >
+            新しい<br />伝説
+          </div>
+          <div
+            style={{
+              fontSize: "clamp(9px, 1.2vw, 15px)",
+              fontWeight: 800,
+              letterSpacing: "4px",
+              color: "rgba(255, 255, 255, 0.05)",
+              fontFamily: "var(--font-display)",
+              marginTop: "2px"
+            }}
+          >
+            ZENJI
+          </div>
+        </div>
+
+        {/* ── 6. BARCODE GRAPHIC (Bottom-Right corner) ── */}
+        <div
+          style={{
+            position: "absolute",
+            bottom: "clamp(48px, 6vw, 66px)",
+            right: "clamp(20px, 4.5vw, 62px)",
+            zIndex: 2,
+            display: "flex",
+            alignItems: "flex-end",
+            gap: "10px",
+            userSelect: "none",
+            pointerEvents: "none"
+          }}
+        >
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "2px" }}>
+            <div style={{ display: "flex", gap: "2px", alignItems: "flex-end", height: "13px" }}>
+              {[3, 1, 4, 1, 5, 2, 6, 2, 1, 4, 2, 5, 1, 3, 2, 1, 4].map((w, i) => (
+                <div key={i} style={{ width: `${w}px`, height: "100%", backgroundColor: "rgba(214, 32, 32, 0.8)" }} />
+              ))}
+            </div>
+            <span
+              style={{
+                fontFamily: "var(--font-meta)",
+                fontSize: "7px",
+                letterSpacing: "1.5px",
+                color: "rgba(214, 32, 32, 0.6)"
+              }}
+            >
+              ZENJI-HUD-001
+            </span>
+          </div>
+        </div>
+
+
       </section>
 
       {/* ── 2. CATALOG & FILTER SECTION ─────────────────────────────── */}
@@ -177,7 +297,6 @@ export const CollectionGridClient: React.FC<CollectionGridClientProps> = ({ prod
         id="collection-catalog"
         style={{
           width: "100%",
-          paddingTop: "var(--space-8)",
           paddingBottom: "var(--space-16)",
           paddingLeft: "clamp(16px, 4vw, 64px)",
           paddingRight: "clamp(16px, 4vw, 64px)",
