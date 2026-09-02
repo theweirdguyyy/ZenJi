@@ -2,10 +2,9 @@
 
 import React, { useState, useMemo } from "react";
 import Image from "next/image";
-import { Container } from "@/components/common/Container";
 import { ProductCard } from "@/components/common/ProductCard";
 import { Product } from "@/types/product";
-import { SlidersHorizontal, ChevronDown } from "lucide-react";
+import { SlidersHorizontal, ChevronDown, ChevronRight } from "lucide-react";
 
 export interface CollectionGridClientProps {
   products: Product[];
@@ -42,59 +41,150 @@ export const CollectionGridClient: React.FC<CollectionGridClientProps> = ({ prod
     return items;
   }, [filteredProducts, sortBy]);
 
+  const scrollToCatalog = () => {
+    const element = document.getElementById("collection-catalog");
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   return (
     <div style={{ backgroundColor: "var(--color-void)", color: "var(--color-white)", minHeight: "100vh" }}>
-      {/* 1. HEADER BANNER */}
+      {/* ── 1. HERO BANNER (Exact Match to Reference Image) ──────────── */}
       <section
         style={{
-  position: "relative",
-  width: "100%",
-  aspectRatio: "1227 / 339",
-  backgroundColor: "var(--color-void)",
-  backgroundImage: "url('/Collection_background.png')",
-  backgroundSize: "cover",
-  backgroundRepeat: "no-repeat",
-  backgroundPosition: "center calc(50% + clamp(20px, 7.9vw, 120px))",
-  display: "flex",
-  alignItems: "center",
-}}
+          position: "relative",
+          width: "100%",
+          aspectRatio: "1672 / 941",
+          minHeight: "clamp(340px, 56.28vw, 940px)",
+          backgroundColor: "#070707",
+          overflow: "hidden",
+          display: "flex",
+          alignItems: "flex-end"
+        }}
       >
-        {/* <div
+        {/* Full-width, uncropped background image */}
+        <Image
+          src="/Collection_background.png"
+          alt="T-Shirt Collection"
+          fill
+          priority
+          unoptimized
+          style={{
+            objectFit: "cover",
+            objectPosition: "center center",
+            width: "100%",
+            height: "100%"
+          }}
+          sizes="100vw"
+        />
+
+        {/* Subtle atmospheric vignette to preserve the exact contrast behind lower-left text */}
+        <div
           style={{
             position: "absolute",
             inset: 0,
-            background: "linear-gradient(to right, rgba(7, 7, 7, 0.95) 0%, rgba(7, 7, 7, 0.6) 60%, rgba(7, 7, 7, 0.2) 100%)"
+            background:
+              "linear-gradient(to top right, rgba(0, 0, 0, 0.82) 0%, rgba(0, 0, 0, 0.5) 30%, rgba(0, 0, 0, 0.15) 55%, transparent 75%)",
+            pointerEvents: "none"
           }}
-        /> */}
+        />
 
-        <Container size="2xl" style={{ position: "relative", zIndex: 2 }}>
-          <h1
-            className="font-display"
-            style={{
-              fontSize: "clamp(36px, 6vw, 64px)",
-              fontWeight: 900,
-              letterSpacing: "2px",
-              lineHeight: 1
-            }}
-          >
-            COLLECTION
-          </h1>
-          <p
-            className="font-meta"
-            style={{
-              fontSize: "var(--font-size-md)",
-              color: "var(--color-mist)",
-              marginTop: "var(--space-2)",
-              letterSpacing: "4px"
-            }}
-          >
-            コレクション
-          </p>
-        </Container>
+        {/* Lower-left Content matching Reference Image */}
+        <div
+          style={{
+            position: "relative",
+            zIndex: 3,
+            width: "100%",
+            paddingBottom: "clamp(24px, 5vw, 64px)",
+            paddingLeft: "clamp(20px, 4vw, 56px)",
+            paddingRight: "clamp(20px, 4vw, 56px)"
+          }}
+        >
+          <div style={{ maxWidth: "560px" }}>
+            {/* Main Heading: T-SHIRT COLLECTION */}
+            <h1
+              className="font-display"
+              style={{
+                fontSize: "clamp(34px, 5.2vw, 76px)",
+                fontWeight: 900,
+                lineHeight: 0.95,
+                letterSpacing: "1.5px",
+                textTransform: "uppercase",
+                color: "var(--color-white)",
+                marginBottom: "clamp(12px, 1.4vw, 18px)",
+                textShadow: "0 4px 28px rgba(0,0,0,0.95), 0 2px 10px rgba(0,0,0,0.85)"
+              }}
+            >
+              T-SHIRT<br />COLLECTION
+            </h1>
+
+            {/* Subtitle */}
+            <p
+              className="font-body"
+              style={{
+                fontSize: "clamp(13px, 1.25vw, 16px)",
+                color: "rgba(255, 255, 255, 0.88)",
+                lineHeight: 1.45,
+                marginBottom: "clamp(16px, 2vw, 24px)",
+                maxWidth: "420px",
+                textShadow: "0 2px 12px rgba(0,0,0,0.9)"
+              }}
+            >
+              Anime inspired. Streetwear redefined.<br />Find your next obsession.
+            </p>
+
+            {/* CTA Button: Outlined box with chevron */}
+            <div>
+              <button
+                type="button"
+                onClick={scrollToCatalog}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  padding: "clamp(9px, 1vw, 13px) clamp(16px, 1.8vw, 24px)",
+                  backgroundColor: "rgba(237, 16, 16, 0.97)",
+                  border: "1px solid rgba(237, 16, 16, 0.97)",
+                  color: "var(--color-white)",
+                  fontFamily: "var(--font-ui)",
+                  fontSize: "clamp(10px, 0.9vw, 12px)",
+                  fontWeight: 700,
+                  marginBottom: "clamp(260px, 2vw, 24px)",
+                  letterSpacing: "2px",
+                  textTransform: "uppercase",
+                  cursor: "pointer",
+                  transition: "all 0.25s ease"
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "rgba(5, 5, 5, 0.97)";
+                  e.currentTarget.style.borderColor = "rgba(237, 16, 16, 0.97)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "rgba(237, 16, 16, 0.97)";
+                  e.currentTarget.style.borderColor = "rgba(237, 16, 16, 0.97)";
+                }}
+              >
+                SHOP COLLECTION <ChevronRight size={13} />
+              </button>
+            </div>
+          </div>
+        </div>
       </section>
 
-      <Container size="2xl" style={{ paddingTop: "var(--space-8)", paddingBottom: "var(--space-16)" }}>
-        {/* 2. CATEGORY FILTER TABS */}
+      {/* ── 2. CATALOG & FILTER SECTION ─────────────────────────────── */}
+      <div
+        id="collection-catalog"
+        style={{
+          width: "100%",
+          paddingTop: "var(--space-8)",
+          paddingBottom: "var(--space-16)",
+          paddingLeft: "clamp(16px, 4vw, 64px)",
+          paddingRight: "clamp(16px, 4vw, 64px)",
+          boxSizing: "border-box"
+        }}
+      >
+        {/* Category Filter Tabs */}
         <div
           style={{
             display: "flex",
@@ -132,7 +222,7 @@ export const CollectionGridClient: React.FC<CollectionGridClientProps> = ({ prod
           })}
         </div>
 
-        {/* 3. FILTER & SORT BAR */}
+        {/* Filter & Sort Bar */}
         <div
           style={{
             display: "flex",
@@ -190,11 +280,12 @@ export const CollectionGridClient: React.FC<CollectionGridClientProps> = ({ prod
           </div>
         </div>
 
-        {/* 4. PRODUCT GRID (4 columns desktop, 2 columns mobile) */}
+        {/* Product Grid */}
         <div
+          className="collection-product-grid"
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+            gridTemplateColumns: "repeat(4, 1fr)",
             gap: "var(--space-6)",
             marginBottom: "var(--space-12)"
           }}
@@ -203,8 +294,19 @@ export const CollectionGridClient: React.FC<CollectionGridClientProps> = ({ prod
             <ProductCard key={product.id} product={product} />
           ))}
         </div>
+        <style>{`
+          @media (max-width: 1024px) {
+            .collection-product-grid { grid-template-columns: repeat(3, 1fr) !important; }
+          }
+          @media (max-width: 768px) {
+            .collection-product-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          }
+          @media (max-width: 480px) {
+            .collection-product-grid { grid-template-columns: repeat(1, 1fr) !important; }
+          }
+        `}</style>
 
-        {/* 5. PAGINATION */}
+        {/* Pagination */}
         <div
           style={{
             display: "flex",
@@ -236,7 +338,7 @@ export const CollectionGridClient: React.FC<CollectionGridClientProps> = ({ prod
           <span style={{ color: "var(--color-mist)", cursor: "pointer" }}>10</span>
           <span style={{ color: "var(--color-white)", cursor: "pointer" }}>&gt;</span>
         </div>
-      </Container>
+      </div>
     </div>
   );
 };
