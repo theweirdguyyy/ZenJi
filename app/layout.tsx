@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Outfit, Inter, JetBrains_Mono } from "next/font/google";
+import { Outfit, Inter, JetBrains_Mono, Bebas_Neue, Anton } from "next/font/google";
 import "@/app/globals.css";
 import { AnnouncementBar } from "@/components/layout/AnnouncementBar";
 import { Navbar } from "@/components/layout/Navbar";
@@ -13,6 +13,20 @@ import { ToastContainer } from "@/components/common/Toast";
 const outfit = Outfit({
   subsets: ["latin"],
   variable: "--font-display-google",
+  display: "swap"
+});
+
+const anton = Anton({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-anton-google",
+  display: "swap"
+});
+
+const bebasNeue = Bebas_Neue({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-bebas-google",
   display: "swap"
 });
 
@@ -52,7 +66,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${outfit.variable} ${inter.variable} ${jetbrainsMono.variable}`}
+      className={`${outfit.variable} ${anton.variable} ${bebasNeue.variable} ${inter.variable} ${jetbrainsMono.variable}`}
     >
       <body className="hud-grid-bg">
         <AnnouncementBar />
