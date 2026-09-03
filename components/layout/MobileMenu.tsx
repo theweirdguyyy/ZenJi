@@ -11,7 +11,7 @@ export const MobileMenu: React.FC = () => {
   if (!isMobileMenuOpen) return null;
 
   const links = [
-    { href: "/shop", label: "SHOP", jp: "ショップ" },
+    { href: "/", label: "HOME", jp: "ホーム" },
     { href: "/collection", label: "COLLECTION", jp: "コレクション" },
     { href: "/lookbook", label: "LOOKBOOK", jp: "ルックブック" },
     { href: "/story", label: "OUR STORY", jp: "私たちについて" },
@@ -22,7 +22,7 @@ export const MobileMenu: React.FC = () => {
     <div
       style={{
         position: "fixed",
-        top: "64px",
+        top: "clamp(56px, 8vw, 64px)",
         left: 0,
         right: 0,
         bottom: 0,

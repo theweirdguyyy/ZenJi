@@ -8,6 +8,7 @@ import { HeroSlider } from "@/components/home/HeroSlider";
 import { NewsletterForm } from "@/components/common/NewsletterForm";
 import { CountdownTimer } from "@/components/home/CountdownTimer";
 import { ShieldCheck, RotateCcw, Truck, Lock, ArrowRight } from "lucide-react";
+import featureBarStyles from "@/components/home/FeatureBar.module.css";
 
 
 export default function HomePage() {
@@ -19,71 +20,42 @@ export default function HomePage() {
       <HeroSlider />
 
       {/* 2. FEATURE BAR (4 Items) */}
-      <section
-        style={{
-          width: "100%",
-          backgroundColor: "rgba(251, 251, 251, 1)",
-          padding: "var(--space-6) 0"
-        }}
-      >
+      <section className={featureBarStyles.featureBar}>
         <Container size="full">
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              gap: "var(--space-6)"
-            }}
-          >
+          <div className={featureBarStyles.grid}>
             {/* Item 1 */}
-            <div style={{ display: "flex", alignItems: "center", gap: "var(--space-4)" }}>
-              <ShieldCheck size={28} style={{ color: "black", flexShrink: 0 }} />
+            <div className={featureBarStyles.item}>
+              <ShieldCheck size={26} className={featureBarStyles.itemIcon} />
               <div>
-                <h4 className="font-ui" style={{ fontSize: "var(--font-size-xs)", color: "black", fontWeight: "bold", letterSpacing: "1px" }}>
-                  PREMIUM QUALITY
-                </h4>
-                <p className="font-body" style={{ fontSize: "12px", color: "black" }}>
-                  Built to last
-                </p>
+                <h4 className={`font-ui ${featureBarStyles.itemTitle}`}>PREMIUM QUALITY</h4>
+                <p className={`font-body ${featureBarStyles.itemSubtitle}`}>Built to last</p>
               </div>
             </div>
 
             {/* Item 2 */}
-            <div style={{ display: "flex", alignItems: "center", gap: "var(--space-4)" }}>
-              <RotateCcw size={28} style={{ color: "black", flexShrink: 0 }} />
+            <div className={featureBarStyles.item}>
+              <RotateCcw size={26} className={featureBarStyles.itemIcon} />
               <div>
-                <h4 className="font-ui" style={{ fontSize: "var(--font-size-xs)", color: "black", fontWeight: "bold", letterSpacing: "1px" }}>
-                  14-DAY RETURNS
-                </h4>
-                <p className="font-body" style={{ fontSize: "12px", color: "black" }}>
-                  Hassle free
-                </p>
+                <h4 className={`font-ui ${featureBarStyles.itemTitle}`}>14-DAY RETURNS</h4>
+                <p className={`font-body ${featureBarStyles.itemSubtitle}`}>Hassle free</p>
               </div>
             </div>
 
             {/* Item 3 */}
-            <div style={{ display: "flex", alignItems: "center", gap: "var(--space-4)" }}>
-              <Truck size={28} style={{ color: "black", flexShrink: 0 }} />
+            <div className={featureBarStyles.item}>
+              <Truck size={26} className={featureBarStyles.itemIcon} />
               <div>
-                <h4 className="font-ui" style={{ fontSize: "var(--font-size-xs)", color: "black", fontWeight: "bold", letterSpacing: "1px" }}>
-                  FAST SHIPPING
-                </h4>
-                <p className="font-body" style={{ fontSize: "12px", color: "black" }}>
-                  Worldwide delivery
-                </p>
+                <h4 className={`font-ui ${featureBarStyles.itemTitle}`}>FAST SHIPPING</h4>
+                <p className={`font-body ${featureBarStyles.itemSubtitle}`}>Worldwide delivery</p>
               </div>
             </div>
 
             {/* Item 4 */}
-            <div style={{ display: "flex", alignItems: "center", gap: "var(--space-4)" }}>
-              <Lock size={28} style={{ color: "black", flexShrink: 0 }} />
+            <div className={featureBarStyles.item}>
+              <Lock size={26} className={featureBarStyles.itemIcon} />
               <div>
-                <h4 className="font-ui" style={{ fontSize: "var(--font-size-xs)", color: "black", fontWeight: "bold", letterSpacing: "1px" }}>
-                  SECURE PAYMENT
-                </h4>
-                <p className="font-body" style={{ fontSize: "12px", color: "black" }}>
-                  100% protected
-                </p>
+                <h4 className={`font-ui ${featureBarStyles.itemTitle}`}>SECURE PAYMENT</h4>
+                <p className={`font-body ${featureBarStyles.itemSubtitle}`}>100% protected</p>
               </div>
             </div>
           </div>

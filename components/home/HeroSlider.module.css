@@ -1,0 +1,268 @@
+/* HeroSlider.module.css */
+.heroSection {
+  position: relative;
+  width: 100%;
+  min-height: calc(100vh - 64px);
+  background-color: #050505;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  padding-top: var(--space-12);
+  padding-bottom: var(--space-16);
+}
+
+.bgLayer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  transition: opacity 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bgDesktop {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+.bgMobile {
+  position: absolute;
+  inset: 0;
+  display: none;
+}
+
+.contentContainer {
+  position: relative;
+  z-index: 5;
+  width: 100%;
+}
+
+.contentWrapper {
+  max-width: 620px;
+  position: relative;
+}
+
+.radialGlow {
+  position: absolute;
+  top: -40px;
+  left: -60px;
+  right: -40px;
+  bottom: -40px;
+  background: radial-gradient(ellipse at 30% 40%, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.35) 50%, rgba(0,0,0,0) 80%);
+  pointer-events: none;
+  z-index: -1;
+  filter: blur(20px);
+}
+
+.textBlock {
+  position: relative;
+  min-height: 260px;
+}
+
+.slideItem {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.slideItemFirst {
+  position: relative;
+}
+
+.slideTitle {
+  font-family: var(--font-display);
+  font-size: clamp(42px, 7vw, 76px);
+  font-weight: 900;
+  line-height: 1.0;
+  letter-spacing: 2px;
+  margin-bottom: var(--space-6);
+  text-transform: uppercase;
+  color: var(--color-white);
+  white-space: pre-line;
+  text-shadow: 0 4px 28px rgba(0,0,0,0.95), 0 2px 10px rgba(0,0,0,0.85), 0 0 40px rgba(0,0,0,0.7);
+}
+
+.titleHighlight {
+  color: var(--color-crimson);
+  font-style: italic;
+  text-shadow: 0 4px 28px rgba(0,0,0,0.95), 0 2px 10px rgba(0,0,0,0.85), 0 0 20px rgba(227,38,26,0.3);
+}
+
+.slideSubtitle {
+  font-family: var(--font-body);
+  font-size: clamp(15px, 2vw, 18px);
+  color: var(--color-mist);
+  margin-bottom: var(--space-8);
+  line-height: 1.5;
+  max-width: 480px;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.9);
+}
+
+.ctaButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--color-crimson);
+  color: var(--color-white);
+  font-family: var(--font-ui);
+  font-size: var(--font-size-xs);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-widest);
+  padding: var(--space-4) var(--space-8);
+  border-radius: 2px;
+  text-decoration: none;
+  transition: opacity 0.2s, transform 0.15s ease;
+  text-transform: uppercase;
+  box-shadow: 0 4px 20px rgba(227,38,26,0.35);
+}
+
+.ctaButton:hover {
+  opacity: 0.92;
+  transform: translateY(-1px);
+}
+
+.controlsBar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-top: var(--space-10);
+}
+
+.controlsLeft {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.slideNumber {
+  font-family: var(--font-meta);
+  font-size: var(--font-size-xs);
+  color: var(--color-mist);
+  min-width: 20px;
+}
+
+.indicatorsGroup {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.indicatorBar {
+  width: 24px;
+  height: 3px;
+  border-radius: 2px;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.arrowsGroup {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 8px;
+}
+
+.arrowBtn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--color-white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.arrowBtn:hover {
+  background-color: rgba(255, 255, 255, 0.18);
+}
+
+/* ==========================================================================
+   MOBILE DEDICATED LAYOUT (< 768px)
+   Matches approved mobile mockup:
+   - Header at top
+   - Both models visible in upper/middle area
+   - Text & CTA anchored to bottom left
+   - Controls bar spanning bottom
+   ========================================================================== */
+@media (max-width: 767px) {
+  .heroSection {
+    min-height: calc(100svh - 56px);
+    height: calc(100svh - 56px);
+    padding-top: 0;
+    padding-bottom: clamp(80px, 14vw, 130px);
+    align-items: flex-end;
+  }
+
+  .bgDesktop {
+    display: none;
+  }
+
+  .bgMobile {
+    display: block;
+  }
+
+  .contentWrapper {
+    max-width: 100%;
+  }
+
+  .radialGlow {
+    display: none;
+  }
+
+  .textBlock {
+    min-height: 195px;
+  }
+
+  .slideTitle {
+    font-size: clamp(34px, 10.5vw, 46px);
+    line-height: 0.95;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+    text-shadow: 0 2px 14px rgba(0, 0, 0, 0.95), 0 0 30px rgba(0, 0, 0, 0.85);
+  }
+
+  .slideSubtitle {
+    font-size: clamp(12.5px, 3.6vw, 14px);
+    margin-bottom: 16px;
+    max-width: 290px;
+    line-height: 1.4;
+    color: rgba(255, 255, 255, 0.82);
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.9);
+  }
+
+  .ctaButton {
+    padding: 10px 20px;
+    font-size: 11px;
+    letter-spacing: 1.6px;
+    border-radius: 4px;
+    box-shadow: 0 4px 16px rgba(227, 38, 26, 0.45);
+  }
+
+  .controlsBar {
+    margin-top: 18px;
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .controlsLeft {
+    gap: 8px;
+  }
+
+  .arrowsGroup {
+    margin-left: 0;
+  }
+
+  .arrowBtn {
+    width: 32px;
+    height: 32px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+}

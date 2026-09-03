@@ -1,0 +1,96 @@
+/* FeatureBar.module.css */
+
+.featureBar {
+  width: 100%;
+  background-color: rgba(251, 251, 251, 1);
+  padding: var(--space-6) 0;
+}
+
+.grid {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-6);
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex: 1;
+}
+
+.itemIcon {
+  color: black;
+  flex-shrink: 0;
+}
+
+.itemTitle {
+  font-size: var(--font-size-xs);
+  color: black;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.itemSubtitle {
+  font-size: 12px;
+  color: black;
+  margin: 0;
+}
+
+/* ── Mobile: 2×2 grid ─── */
+@media (max-width: 767px) {
+  .featureBar {
+    padding: var(--space-5) 0;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+  }
+
+  .item {
+    flex: unset;
+    gap: 10px;
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  }
+
+  /* Remove bottom border from last 2 items */
+  .item:nth-child(3),
+  .item:nth-child(4) {
+    border-bottom: none;
+  }
+
+  /* Add right divider between columns */
+  .item:nth-child(odd) {
+    border-right: 1px solid rgba(0, 0, 0, 0.08);
+  }
+
+  .itemIcon {
+    width: 22px;
+    height: 22px;
+  }
+
+  .itemTitle {
+    font-size: 10.5px;
+    letter-spacing: 0.6px;
+  }
+
+  .itemSubtitle {
+    font-size: 11px;
+  }
+}
+
+/* ── Tablet: 2 rows of 2 with more space ─── */
+@media (min-width: 480px) and (max-width: 767px) {
+  .item {
+    padding: 16px 20px;
+    gap: 12px;
+  }
+
+  .itemTitle {
+    font-size: 11px;
+  }
+}

@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import styles from "./Navbar.module.css";
 
 const NAV_ITEMS = [
-  { href: "/shop", label: "SHOP" },
+  { href: "/", label: "HOME" },
   { href: "/collection", label: "COLLECTION" },
   { href: "/lookbook", label: "LOOKBOOK" },
   { href: "/story", label: "STORY" },
