@@ -108,12 +108,58 @@
   justify-content: center;
 }
 
+.mobileToggleLeft {
+  display: none;
+}
+
 .mobileMenuBtn {
   display: none;
 }
 
-@media (max-width: 1023px) {
+/* Tablet (768px - 1023px): show right hamburger */
+@media (min-width: 768px) and (max-width: 1023px) {
   .mobileMenuBtn {
     display: inline-flex;
+  }
+}
+
+/* Mobile (< 768px): Dedicated 3-column layout matching approved mobile design */
+@media (max-width: 767px) {
+  .inner {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+  }
+
+  .mobileToggleLeft {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    z-index: 2;
+    width: 36px;
+  }
+
+  .logo {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.2rem;
+    letter-spacing: 0.14em;
+    z-index: 1;
+    white-space: nowrap;
+  }
+
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    z-index: 2;
+  }
+
+  .mobileMenuBtn {
+    display: none !important;
   }
 }
