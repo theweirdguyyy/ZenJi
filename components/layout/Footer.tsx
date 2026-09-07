@@ -2,29 +2,15 @@ import React from "react";
 import Link from "next/link";
 import { Container } from "@/components/common/Container";
 import { Instagram, Twitter, Youtube, ArrowRight } from "lucide-react";
+import styles from "./Footer.module.css";
 
 export const Footer: React.FC = () => {
   return (
-    <footer
-      style={{
-        backgroundColor: "var(--color-void)",
-        color: "var(--color-white)",
-        borderTop: "1px solid var(--color-border-subtle)",
-        paddingTop: "var(--space-16)",
-        paddingBottom: "var(--space-8)"
-      }}
-    >
+    <footer className={styles.footerContainer}>
       <Container size="full">
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-            gap: "var(--space-10)",
-            marginBottom: "var(--space-12)"
-          }}
-        >
+        <div className={styles.footerGrid}>
           {/* Brand & Socials */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
+          <div className={styles.brandCol} style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
             <h2 className="font-display" style={{ fontSize: "var(--font-size-2xl)", letterSpacing: "2px" }}>
               ZENJI <span style={{ color: "var(--color-crimson)" }}>.</span>
             </h2>
@@ -51,7 +37,7 @@ export const Footer: React.FC = () => {
           </div>
 
           {/* SHOP Column */}
-          <div>
+          <div className={styles.linkCol}>
             <h3 className="font-meta" style={{ color: "var(--color-white)", fontSize: "var(--font-size-xs)", letterSpacing: "1.5px", marginBottom: "var(--space-4)" }}>
               SHOP
             </h3>
@@ -64,7 +50,7 @@ export const Footer: React.FC = () => {
           </div>
 
           {/* COMPANY Column */}
-          <div>
+          <div className={styles.linkCol}>
             <h3 className="font-meta" style={{ color: "var(--color-white)", fontSize: "var(--font-size-xs)", letterSpacing: "1.5px", marginBottom: "var(--space-4)" }}>
               COMPANY
             </h3>
@@ -77,7 +63,7 @@ export const Footer: React.FC = () => {
           </div>
 
           {/* SUPPORT Column */}
-          <div>
+          <div className={styles.linkCol}>
             <h3 className="font-meta" style={{ color: "var(--color-white)", fontSize: "var(--font-size-xs)", letterSpacing: "1.5px", marginBottom: "var(--space-4)" }}>
               SUPPORT
             </h3>
@@ -90,7 +76,7 @@ export const Footer: React.FC = () => {
           </div>
 
           {/* NEWSLETTER Column */}
-          <div>
+          <div className={styles.newsletterCol}>
             <h3 className="font-meta" style={{ color: "var(--color-white)", fontSize: "var(--font-size-xs)", letterSpacing: "1.5px", marginBottom: "var(--space-4)" }}>
               NEWSLETTER
             </h3>
@@ -128,7 +114,7 @@ export const Footer: React.FC = () => {
             </div>
 
             {/* Payment Icons */}
-            <div style={{ display: "flex", gap: "var(--space-2)", fontSize: "10px", color: "var(--color-mist)" }}>
+            <div style={{ display: "flex", gap: "var(--space-2)", fontSize: "10px", color: "var(--color-mist)", flexWrap: "wrap" }}>
               <span style={{ border: "1px solid var(--color-border-subtle)", padding: "2px 6px", borderRadius: "2px" }}>VISA</span>
               <span style={{ border: "1px solid var(--color-border-subtle)", padding: "2px 6px", borderRadius: "2px" }}>MC</span>
               <span style={{ border: "1px solid var(--color-border-subtle)", padding: "2px 6px", borderRadius: "2px" }}>PayPal</span>
@@ -138,21 +124,9 @@ export const Footer: React.FC = () => {
         </div>
 
         {/* Bottom copyright bar */}
-        <div
-          style={{
-            borderTop: "1px solid var(--color-border-subtle)",
-            paddingTop: "var(--space-6)",
-            display: "flex",
-            flexWrap: "wrap",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: "var(--space-4)",
-            fontSize: "11px",
-            color: "var(--color-text-muted)"
-          }}
-        >
+        <div className={styles.bottomBar}>
           <p>© 2024 ZENJI. All rights reserved.</p>
-          <div style={{ display: "flex", gap: "var(--space-4)" }}>
+          <div style={{ display: "flex", gap: "var(--space-4)", flexWrap: "wrap" }}>
             <Link href="/support">Privacy Policy</Link>
             <Link href="/support">Terms of Service</Link>
             <Link href="/support">Refund Policy</Link>

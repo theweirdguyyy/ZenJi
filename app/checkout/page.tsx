@@ -2,10 +2,17 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import { ChevronDown, Check } from "lucide-react";
+import Link from "next/link";
+import {
+  ChevronDown, Check, ShoppingBag, Lock, ArrowLeft,
+  AlertCircle, Download, Printer, CheckCircle2, ShieldCheck, Truck
+} from "lucide-react";
+import { useCartStore } from "@/store/cart-store";
+import { COUNTRIES_DATA, getStatesForCountry } from "@/data/countries-and-states";
+import styles from "./Checkout.module.css";
 
-// ── Mock cart items for demo ────────────────────────────────────────────────
-const CART_ITEMS = [
+// Fallback mock items if cart store is empty
+const MOCK_CART_ITEMS = [
   {
     id: "1",
     name: "Shadow Clan Hoodie",
@@ -22,33 +29,19 @@ const CART_ITEMS = [
   }
 ];
 
-const SHIPPING_COST = 9.99;
-const subtotal = CART_ITEMS.reduce((sum, item) => sum + item.price, 0);
-const total = subtotal + SHIPPING_COST;
-
 const STEPS = [
   { number: "01", label: "CONTACT" },
   { number: "02", label: "SHIPPING" },
   { number: "03", label: "PAYMENT" }
 ];
 
-const US_STATES = [
-  "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut",
-  "Delaware", "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa",
-  "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan",
-  "Minnesota", "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire",
-  "New Jersey", "New Mexico", "New York", "North Carolina", "North Dakota", "Ohio",
-  "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island", "South Carolina", "South Dakota",
-  "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington", "West Virginia",
-  "Wisconsin", "Wyoming"
+const SHIPPING_OPTIONS = [
+  { id: "standard", label: "Standard Shipping", sub: "5–7 business days", basePrice: 9.99 },
+  { id: "express", label: "Express Shipping", sub: "2–3 business days", basePrice: 19.99 },
+  { id: "overnight", label: "Overnight Shipping", sub: "Next business day", basePrice: 39.99 }
 ];
 
-const COUNTRIES = [
-  "United States", "Australia", "Canada", "United Kingdom", "Germany",
-  "France", "Japan", "Singapore", "New Zealand", "Netherlands"
-];
-
-// ── Input & Select components ──────────────────────────────────────────────
+// Base input style
 const inputStyle: React.CSSProperties = {
   width: "100%",
   backgroundColor: "var(--color-void)",
@@ -59,7 +52,7 @@ const inputStyle: React.CSSProperties = {
   fontFamily: "var(--font-body)",
   fontSize: "14px",
   outline: "none",
-  transition: "border-color 0.2s ease",
+  transition: "border-color 0.2s ease, background-color 0.2s ease",
   boxSizing: "border-box"
 };
 
@@ -74,38 +67,587 @@ const labelStyle: React.CSSProperties = {
   fontFamily: "var(--font-ui)"
 };
 
+interface OrderReceipt {
+  orderId: string;
+  orderDate: string;
+  customerName: string;
+  email: string;
+  phone: string;
+  shippingAddress: string;
+  shippingMethod: string;
+  shippingCost: number;
+  subtotal: number;
+  total: number;
+  items: {
+    id: string;
+    name: string;
+    variant: string;
+    price: number;
+    quantity: number;
+  }[];
+}
+
 export default function CheckoutPage() {
+  const { items: storeItems, getSubtotal, clearCart } = useCartStore();
   const [activeStep, setActiveStep] = useState(0);
+  const [isMobileSummaryOpen, setIsMobileSummaryOpen] = useState(false);
+
+  // Form State
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [emailsOffers, setEmailsOffers] = useState(false);
-  const [discountCode, setDiscountCode] = useState("");
   const [country, setCountry] = useState("United States");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [address, setAddress] = useState("");
+  const [apartment, setApartment] = useState("");
+  const [city, setCity] = useState("");
   const [state, setState] = useState("");
+  const [zip, setZip] = useState("");
 
+  // Shipping & Payment State
+  const [shippingMethod, setShippingMethod] = useState("standard");
+  const [discountCode, setDiscountCode] = useState("");
+  const [cardNumber, setCardNumber] = useState("");
+  const [cardName, setCardName] = useState("");
+  const [cardExpiry, setCardExpiry] = useState("");
+  const [cardCvc, setCardCvc] = useState("");
+
+  // Validation errors & completion state
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [stepErrorAlert, setStepErrorAlert] = useState("");
+  const [completedReceipt, setCompletedReceipt] = useState<OrderReceipt | null>(null);
+
+  // Cart items
+  const hasStoreItems = storeItems && storeItems.length > 0;
+  const items = hasStoreItems
+    ? storeItems.map(item => ({
+        id: item.id,
+        name: item.product.name,
+        variant: `${item.selectedColor.name} / ${item.selectedSize}`,
+        unitPrice: item.product.price,
+        price: item.product.price * item.quantity,
+        quantity: item.quantity,
+        image: item.product.images?.[0] || ""
+      }))
+    : MOCK_CART_ITEMS.map(item => ({ ...item, unitPrice: item.price, quantity: 1 }));
+
+  const subtotal = hasStoreItems ? getSubtotal() : MOCK_CART_ITEMS.reduce((sum, item) => sum + item.price, 0);
+  const FREE_SHIPPING_THRESHOLD = 150;
+  const isFreeShipping = subtotal >= FREE_SHIPPING_THRESHOLD;
+
+  // Calculate dynamic shipping cost based on selected method
+  const getShippingFee = (methodId: string) => {
+    if (methodId === "standard") return isFreeShipping ? 0 : 9.99;
+    if (methodId === "express") return 19.99;
+    if (methodId === "overnight") return 39.99;
+    return 9.99;
+  };
+
+  const currentShippingCost = getShippingFee(shippingMethod);
+  const total = subtotal + currentShippingCost;
+
+  // Available states for selected country
+  const availableStates = getStatesForCountry(country);
+
+  // Handle Country change
+  const handleCountryChange = (newCountry: string) => {
+    setCountry(newCountry);
+    const newStates = getStatesForCountry(newCountry);
+    setState(newStates.length > 0 ? newStates[0] : "");
+  };
+
+  // ── Step 0 Validation (Contact & Address) ──────────────────────────────────
+  const validateContactStep = () => {
+    const errors: Record<string, string> = {};
+    if (!email.trim() || !email.includes("@") || !email.includes(".")) {
+      errors.email = "Please enter a valid email address.";
+    }
+    if (!phone.trim() || phone.trim().length < 6) {
+      errors.phone = "Please enter a valid phone number.";
+    }
+    if (!firstName.trim()) errors.firstName = "First name is required.";
+    if (!lastName.trim()) errors.lastName = "Last name is required.";
+    if (!address.trim()) errors.address = "Address is required.";
+    if (!city.trim()) errors.city = "City is required.";
+    if (!state.trim()) errors.state = "State/Province is required.";
+    if (!zip.trim()) errors.zip = "ZIP/Postal code is required.";
+
+    setFormErrors(errors);
+
+    if (Object.keys(errors).length > 0) {
+      setStepErrorAlert("Please complete all required contact and shipping address fields.");
+      return false;
+    }
+
+    setStepErrorAlert("");
+    return true;
+  };
+
+  // ── Step 2 Validation (Payment & Order Placement) ─────────────────────────
+  const validatePaymentStep = () => {
+    const errors: Record<string, string> = {};
+    const sanitizedCard = cardNumber.replace(/\s+/g, "");
+    if (!sanitizedCard || sanitizedCard.length < 15) {
+      errors.cardNumber = "Please enter a valid card number.";
+    }
+    if (!cardName.trim()) {
+      errors.cardName = "Name on card is required.";
+    }
+    if (!cardExpiry.trim() || !cardExpiry.includes("/")) {
+      errors.cardExpiry = "Expiry (MM/YY) is required.";
+    }
+    if (!cardCvc.trim() || cardCvc.length < 3) {
+      errors.cardCvc = "CVC is required.";
+    }
+
+    setFormErrors(errors);
+
+    if (Object.keys(errors).length > 0) {
+      setStepErrorAlert("Please complete all required payment details to place your order.");
+      return false;
+    }
+
+    setStepErrorAlert("");
+    return true;
+  };
+
+  // Advance from Step 0 to Step 1
+  const handleProceedToShipping = () => {
+    if (validateContactStep()) {
+      setActiveStep(1);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
+  // Advance from Step 1 to Step 2
+  const handleProceedToPayment = () => {
+    setActiveStep(2);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // Place Order
+  const handlePlaceOrder = () => {
+    if (!validatePaymentStep()) return;
+
+    const chosenOption = SHIPPING_OPTIONS.find(o => o.id === shippingMethod);
+    const receipt: OrderReceipt = {
+      orderId: `ZNJ-${Math.floor(100000 + Math.random() * 900000)}`,
+      orderDate: new Date().toLocaleString("en-US", {
+        dateStyle: "medium",
+        timeStyle: "short"
+      }),
+      customerName: `${firstName.trim()} ${lastName.trim()}`,
+      email: email.trim(),
+      phone: phone.trim(),
+      shippingAddress: `${address.trim()}${apartment.trim() ? ", " + apartment.trim() : ""}, ${city.trim()}, ${state.trim()} ${zip.trim()}, ${country}`,
+      shippingMethod: chosenOption ? chosenOption.label : "Standard Shipping",
+      shippingCost: currentShippingCost,
+      subtotal,
+      total,
+      items: items.map(i => ({
+        id: i.id,
+        name: i.name,
+        variant: i.variant,
+        price: i.price,
+        quantity: i.quantity
+      }))
+    };
+
+    setCompletedReceipt(receipt);
+    clearCart();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // Download Receipt as Text / Invoice file
+  const handleDownloadReceipt = () => {
+    if (!completedReceipt) return;
+
+    const receiptText = `
+============================================================
+              ZENJI NEO KAGE — OFFICIAL RECEIPT             
+============================================================
+Order Number:     ${completedReceipt.orderId}
+Date & Time:      ${completedReceipt.orderDate}
+Payment Status:   PAID (Authorized)
+------------------------------------------------------------
+CUSTOMER INFORMATION:
+Name:             ${completedReceipt.customerName}
+Email:            ${completedReceipt.email}
+Phone:            ${completedReceipt.phone}
+
+SHIPPING ADDRESS:
+${completedReceipt.shippingAddress}
+
+SHIPPING METHOD:
+${completedReceipt.shippingMethod} (${completedReceipt.shippingCost === 0 ? "FREE" : `$${completedReceipt.shippingCost.toFixed(2)}`})
+------------------------------------------------------------
+ORDERED ITEMS:
+${completedReceipt.items
+  .map(
+    (it, idx) =>
+      `${idx + 1}. ${it.name} [${it.variant}]\n   Qty: ${it.quantity}  x  $${(it.price / it.quantity).toFixed(2)}  =  $${it.price.toFixed(2)}`
+  )
+  .join("\n\n")}
+------------------------------------------------------------
+PRICE BREAKDOWN:
+Subtotal:         $${completedReceipt.subtotal.toFixed(2)}
+Shipping:         ${completedReceipt.shippingCost === 0 ? "FREE" : `$${completedReceipt.shippingCost.toFixed(2)}`}
+Total Paid:       $${completedReceipt.total.toFixed(2)}
+============================================================
+       THANK YOU FOR YOUR ORDER. WEAR THE LEGEND.
+               https://zenji-neokage.com
+============================================================
+    `.trim();
+
+    const blob = new Blob([receiptText], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `ZENJI_Receipt_${completedReceipt.orderId}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  // Print Receipt
+  const handlePrintReceipt = () => {
+    window.print();
+  };
+
+  // ── ORDER CONFIRMED VIEW ──────────────────────────────────────────────────
+  if (completedReceipt) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.confirmationWrapper}>
+          <div className={styles.receiptCard}>
+            {/* Header Badge */}
+            <div style={{ textAlign: "center", marginBottom: "24px" }}>
+              <div
+                style={{
+                  width: "60px",
+                  height: "60px",
+                  borderRadius: "50%",
+                  backgroundColor: "rgba(227,38,26,0.12)",
+                  border: "1px solid var(--color-crimson)",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginBottom: "14px"
+                }}
+              >
+                <CheckCircle2 size={32} color="var(--color-crimson)" />
+              </div>
+              <p
+                style={{
+                  fontSize: "11px",
+                  fontFamily: "var(--font-ui)",
+                  letterSpacing: "3px",
+                  fontWeight: 700,
+                  color: "var(--color-crimson)",
+                  textTransform: "uppercase"
+                }}
+              >
+                ORDER CONFIRMED
+              </p>
+              <h1
+                className="font-display"
+                style={{
+                  fontSize: "clamp(24px, 4vw, 36px)",
+                  fontWeight: 900,
+                  letterSpacing: "1.5px",
+                  color: "var(--color-white)",
+                  marginTop: "4px"
+                }}
+              >
+                #{completedReceipt.orderId}
+              </h1>
+              <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.5)", fontFamily: "var(--font-body)", marginTop: "4px" }}>
+                Placed on {completedReceipt.orderDate}
+              </p>
+            </div>
+
+            {/* Customer & Shipping Details Summary */}
+            <div
+              style={{
+                backgroundColor: "rgba(255,255,255,0.03)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: "4px",
+                padding: "16px 20px",
+                marginBottom: "24px"
+              }}
+            >
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "16px" }}>
+                <div>
+                  <span style={{ fontSize: "10px", letterSpacing: "1.5px", color: "rgba(255,255,255,0.4)", fontFamily: "var(--font-ui)", fontWeight: 700, textTransform: "uppercase" }}>
+                    SHIPPING TO
+                  </span>
+                  <p style={{ fontSize: "13px", fontWeight: 700, color: "var(--color-white)", marginTop: "4px" }}>
+                    {completedReceipt.customerName}
+                  </p>
+                  <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.6)", lineHeight: 1.4, marginTop: "2px" }}>
+                    {completedReceipt.shippingAddress}
+                  </p>
+                  <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)", marginTop: "2px" }}>
+                    {completedReceipt.phone}
+                  </p>
+                </div>
+                <div>
+                  <span style={{ fontSize: "10px", letterSpacing: "1.5px", color: "rgba(255,255,255,0.4)", fontFamily: "var(--font-ui)", fontWeight: 700, textTransform: "uppercase" }}>
+                    DELIVERY METHOD
+                  </span>
+                  <p style={{ fontSize: "13px", fontWeight: 700, color: "var(--color-white)", marginTop: "4px" }}>
+                    {completedReceipt.shippingMethod}
+                  </p>
+                  <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.6)", marginTop: "2px" }}>
+                    Confirmation sent to <strong style={{ color: "var(--color-white)" }}>{completedReceipt.email}</strong>
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Ordered Items Table */}
+            <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: "16px", marginBottom: "16px" }}>
+              <span style={{ fontSize: "11px", letterSpacing: "1.5px", color: "rgba(255,255,255,0.5)", fontFamily: "var(--font-ui)", fontWeight: 700, textTransform: "uppercase" }}>
+                ORDER ITEMS ({completedReceipt.items.length})
+              </span>
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "12px" }}>
+                {completedReceipt.items.map((it) => (
+                  <div key={it.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                    <div>
+                      <p style={{ fontSize: "13px", fontWeight: 700, color: "var(--color-white)", fontFamily: "var(--font-ui)" }}>
+                        {it.name}
+                      </p>
+                      <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.45)" }}>
+                        {it.variant} • Qty: {it.quantity}
+                      </p>
+                    </div>
+                    <span style={{ fontFamily: "var(--font-ui)", fontSize: "14px", fontWeight: 700, color: "var(--color-white)" }}>
+                      ${it.price.toFixed(2)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Price Breakdown */}
+            <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: "16px", display: "flex", flexDirection: "column", gap: "8px", marginBottom: "24px" }}>
+              <div className={styles.receiptRow}>
+                <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.5)", fontFamily: "var(--font-ui)", fontWeight: 700 }}>SUBTOTAL</span>
+                <span style={{ fontSize: "13px", color: "var(--color-white)", fontFamily: "var(--font-ui)", fontWeight: 700 }}>${completedReceipt.subtotal.toFixed(2)}</span>
+              </div>
+              <div className={styles.receiptRow}>
+                <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.5)", fontFamily: "var(--font-ui)", fontWeight: 700 }}>SHIPPING</span>
+                <span style={{ fontSize: "13px", color: completedReceipt.shippingCost === 0 ? "var(--color-crimson)" : "var(--color-white)", fontFamily: "var(--font-ui)", fontWeight: 700 }}>
+                  {completedReceipt.shippingCost === 0 ? "FREE" : `$${completedReceipt.shippingCost.toFixed(2)}`}
+                </span>
+              </div>
+              <div className={styles.receiptRow} style={{ borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: "12px" }}>
+                <span style={{ fontSize: "14px", fontWeight: 900, color: "var(--color-white)", fontFamily: "var(--font-display)" }}>TOTAL PAID</span>
+                <span style={{ fontSize: "22px", fontWeight: 900, color: "var(--color-white)", fontFamily: "var(--font-display)" }}>
+                  ${completedReceipt.total.toFixed(2)}
+                </span>
+              </div>
+            </div>
+
+            {/* Receipt Action Buttons */}
+            <div className={styles.confirmationActions} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              <div style={{ display: "flex", gap: "12px" }}>
+                <button
+                  onClick={handleDownloadReceipt}
+                  style={{
+                    flex: 1,
+                    backgroundColor: "var(--color-crimson)",
+                    color: "var(--color-white)",
+                    border: "none",
+                    borderRadius: "3px",
+                    padding: "14px",
+                    fontFamily: "var(--font-ui)",
+                    fontSize: "11px",
+                    fontWeight: 700,
+                    letterSpacing: "1.5px",
+                    textTransform: "uppercase",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px",
+                    boxShadow: "0 4px 16px rgba(227,38,26,0.35)"
+                  }}
+                >
+                  <Download size={15} /> DOWNLOAD RECEIPT (.TXT)
+                </button>
+                <button
+                  onClick={handlePrintReceipt}
+                  style={{
+                    backgroundColor: "rgba(255,255,255,0.08)",
+                    color: "var(--color-white)",
+                    border: "1px solid rgba(255,255,255,0.2)",
+                    borderRadius: "3px",
+                    padding: "14px 20px",
+                    fontFamily: "var(--font-ui)",
+                    fontSize: "11px",
+                    fontWeight: 700,
+                    letterSpacing: "1.5px",
+                    textTransform: "uppercase",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px"
+                  }}
+                >
+                  <Printer size={15} /> PRINT
+                </button>
+              </div>
+
+              <Link
+                href="/shop"
+                style={{
+                  display: "block",
+                  textAlign: "center",
+                  padding: "13px",
+                  border: "1px solid rgba(255,255,255,0.15)",
+                  borderRadius: "3px",
+                  color: "rgba(255,255,255,0.7)",
+                  fontFamily: "var(--font-ui)",
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  letterSpacing: "2px",
+                  textDecoration: "none",
+                  textTransform: "uppercase"
+                }}
+              >
+                CONTINUE SHOPPING
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── STANDARD CHECKOUT FLOW ────────────────────────────────────────────────
   return (
-    <div
-      style={{
-        backgroundColor: "var(--color-void)",
-        color: "var(--color-white)",
-        minHeight: "calc(100vh - 64px)",
-        padding: "clamp(32px, 5vw, 64px) clamp(16px, 4vw, 60px)"
-      }}
-    >
-      <div
-        style={{
-          maxWidth: "1200px",
-          margin: "0 auto",
-          display: "grid",
-          gridTemplateColumns: "minmax(0, 1.2fr) minmax(0, 0.85fr)",
-          gap: "clamp(24px, 4vw, 64px)",
-          alignItems: "flex-start"
-        }}
-      >
+    <div className={styles.container}>
+      <div className={styles.mainGrid}>
+        
+        {/* ── LEFT/CENTER FORM COLUMN ───────────────────────────── */}
+        <div className={styles.formColumn}>
+          {/* Mobile Order Summary Collapsible Toggle */}
+          <div
+            className={styles.mobileSummaryToggle}
+            onClick={() => setIsMobileSummaryOpen(!isMobileSummaryOpen)}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <ShoppingBag size={18} color="var(--color-crimson)" />
+              <span
+                className="font-ui"
+                style={{
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  letterSpacing: "1.5px",
+                  color: "var(--color-white)",
+                  textTransform: "uppercase"
+                }}
+              >
+                {isMobileSummaryOpen ? "HIDE ORDER SUMMARY" : "SHOW ORDER SUMMARY"}
+              </span>
+              <ChevronDown
+                size={16}
+                color="rgba(255,255,255,0.6)"
+                style={{
+                  transform: isMobileSummaryOpen ? "rotate(180deg)" : "rotate(0deg)",
+                  transition: "transform 0.25s ease"
+                }}
+              />
+            </div>
+            <span
+              className="font-display"
+              style={{
+                fontSize: "16px",
+                fontWeight: 900,
+                color: "var(--color-white)"
+              }}
+            >
+              ${total.toFixed(2)}
+            </span>
+          </div>
 
-        {/* ── LEFT COLUMN: FORM ─────────────────────────────────── */}
-        <div>
+          {/* Mobile Summary Expanded Content */}
+          {isMobileSummaryOpen && (
+            <div className={styles.mobileSummaryContent}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "16px" }}>
+                {items.map((item) => (
+                  <div key={item.id} className={styles.summaryItemRow}>
+                    <div
+                      style={{
+                        width: "48px",
+                        height: "48px",
+                        borderRadius: "3px",
+                        overflow: "hidden",
+                        flexShrink: 0,
+                        backgroundColor: "rgba(255,255,255,0.05)",
+                        position: "relative"
+                      }}
+                    >
+                      {item.image && (
+                        <Image
+                          src={item.image}
+                          alt={item.name}
+                          fill
+                          style={{ objectFit: "cover" }}
+                          sizes="48px"
+                        />
+                      )}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div
+                        style={{
+                          fontSize: "12px",
+                          fontWeight: 700,
+                          color: "var(--color-white)",
+                          fontFamily: "var(--font-ui)",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis"
+                        }}
+                      >
+                        {item.name}
+                      </div>
+                      <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.45)", fontFamily: "var(--font-body)" }}>
+                        {item.variant} • Qty: {item.quantity}
+                      </div>
+                    </div>
+                    <span style={{ fontFamily: "var(--font-ui)", fontSize: "13px", fontWeight: 700, color: "var(--color-white)" }}>
+                      ${item.price.toFixed(2)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: "12px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
+                  <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.5)", fontFamily: "var(--font-ui)", fontWeight: 700 }}>SUBTOTAL</span>
+                  <span style={{ fontSize: "12px", color: "var(--color-white)", fontFamily: "var(--font-ui)", fontWeight: 700 }}>${subtotal.toFixed(2)}</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
+                  <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.5)", fontFamily: "var(--font-ui)", fontWeight: 700 }}>SHIPPING</span>
+                  <span style={{ fontSize: "12px", color: currentShippingCost === 0 ? "var(--color-crimson)" : "var(--color-white)", fontFamily: "var(--font-ui)", fontWeight: 700 }}>
+                    {currentShippingCost === 0 ? "FREE" : `$${currentShippingCost.toFixed(2)}`}
+                  </span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: "8px" }}>
+                  <span style={{ fontSize: "12px", fontWeight: 900, color: "var(--color-white)", fontFamily: "var(--font-display)" }}>TOTAL</span>
+                  <span style={{ fontSize: "16px", fontWeight: 900, color: "var(--color-white)", fontFamily: "var(--font-display)" }}>${total.toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Step Progress Bar */}
-          <div style={{ marginBottom: "clamp(28px, 4vw, 40px)" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "0", position: "relative" }}>
+          <div style={{ marginBottom: "clamp(24px, 4vw, 40px)" }}>
+            <div className={styles.stepsBar}>
               {STEPS.map((step, idx) => {
                 const isActive = idx === activeStep;
                 const isDone = idx < activeStep;
@@ -113,17 +655,15 @@ export default function CheckoutPage() {
                 return (
                   <React.Fragment key={step.number}>
                     <button
-                      onClick={() => idx <= activeStep && setActiveStep(idx)}
-                      style={{
-                        background: "none",
-                        border: "none",
-                        cursor: idx <= activeStep ? "pointer" : "default",
-                        padding: 0,
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "6px",
-                        whiteSpace: "nowrap"
+                      onClick={() => {
+                        // Allow clicking previous steps
+                        if (idx < activeStep) setActiveStep(idx);
+                        // Going forward requires validation
+                        else if (idx === 1 && activeStep === 0) handleProceedToShipping();
+                        else if (idx === 2 && activeStep === 1) handleProceedToPayment();
                       }}
+                      className={styles.stepBtn}
+                      style={{ cursor: idx <= activeStep ? "pointer" : "default" }}
                     >
                       <span
                         style={{
@@ -134,7 +674,7 @@ export default function CheckoutPage() {
                           color: isActive
                             ? "var(--color-crimson)"
                             : isDone
-                            ? "rgba(255,255,255,0.5)"
+                            ? "rgba(255,255,255,0.55)"
                             : "rgba(255,255,255,0.3)"
                         }}
                       >
@@ -143,15 +683,7 @@ export default function CheckoutPage() {
                     </button>
 
                     {idx < STEPS.length - 1 && (
-                      <div
-                        style={{
-                          flex: 1,
-                          margin: "0 12px",
-                          position: "relative",
-                          height: "2px",
-                          backgroundColor: "rgba(255,255,255,0.12)"
-                        }}
-                      >
+                      <div className={styles.stepConnector}>
                         {isDone && (
                           <div
                             style={{
@@ -171,28 +703,13 @@ export default function CheckoutPage() {
                             }}
                           />
                         )}
-                        {/* Dot at end */}
-                        <div
-                          style={{
-                            position: "absolute",
-                            right: "-4px",
-                            top: "50%",
-                            transform: "translateY(-50%)",
-                            width: "8px",
-                            height: "8px",
-                            borderRadius: "50%",
-                            backgroundColor: isDone
-                              ? "var(--color-crimson)"
-                              : "rgba(255,255,255,0.25)"
-                          }}
-                        />
                       </div>
                     )}
                   </React.Fragment>
                 );
               })}
             </div>
-            {/* Active step underline */}
+            {/* Active step underline bar */}
             <div
               style={{
                 marginTop: "8px",
@@ -211,7 +728,15 @@ export default function CheckoutPage() {
             </div>
           </div>
 
-          {/* ── STEP 1: CONTACT ──────────────────────────────────── */}
+          {/* Form Error Alert */}
+          {stepErrorAlert && (
+            <div className={styles.alertBox}>
+              <AlertCircle size={18} color="var(--color-crimson)" style={{ flexShrink: 0 }} />
+              <span>{stepErrorAlert}</span>
+            </div>
+          )}
+
+          {/* ── STEP 1: CONTACT & ADDRESS ────────────────────────── */}
           {activeStep === 0 && (
             <div>
               <h2
@@ -229,20 +754,43 @@ export default function CheckoutPage() {
               </h2>
 
               <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "16px" }}>
-                <input
-                  type="email"
-                  placeholder="Email address"
-                  style={inputStyle}
-                  onFocus={e => (e.target.style.borderColor = "var(--color-crimson)")}
-                  onBlur={e => (e.target.style.borderColor = "rgba(255,255,255,0.15)")}
-                />
-                <input
-                  type="tel"
-                  placeholder="Phone (optional)"
-                  style={inputStyle}
-                  onFocus={e => (e.target.style.borderColor = "var(--color-crimson)")}
-                  onBlur={e => (e.target.style.borderColor = "rgba(255,255,255,0.15)")}
-                />
+                <div>
+                  <input
+                    type="email"
+                    placeholder="Email address *"
+                    value={email}
+                    onChange={e => {
+                      setEmail(e.target.value);
+                      if (formErrors.email) setFormErrors({ ...formErrors, email: "" });
+                    }}
+                    className={formErrors.email ? styles.inputError : ""}
+                    style={inputStyle}
+                  />
+                  {formErrors.email && (
+                    <p style={{ fontSize: "11px", color: "var(--color-crimson)", marginTop: "4px" }}>
+                      {formErrors.email}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <input
+                    type="tel"
+                    placeholder="Phone number *"
+                    value={phone}
+                    onChange={e => {
+                      setPhone(e.target.value);
+                      if (formErrors.phone) setFormErrors({ ...formErrors, phone: "" });
+                    }}
+                    className={formErrors.phone ? styles.inputError : ""}
+                    style={inputStyle}
+                  />
+                  {formErrors.phone && (
+                    <p style={{ fontSize: "11px", color: "var(--color-crimson)", marginTop: "4px" }}>
+                      {formErrors.phone}
+                    </p>
+                  )}
+                </div>
               </div>
 
               {/* Email checkbox */}
@@ -280,7 +828,7 @@ export default function CheckoutPage() {
                     fontFamily: "var(--font-body)"
                   }}
                 >
-                  Email me with news and offers
+                  Email me with news and limited drop offers
                 </span>
               </label>
 
@@ -300,14 +848,14 @@ export default function CheckoutPage() {
               </h2>
 
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                {/* Country Select */}
+                {/* Comprehensive Country Selector */}
                 <div style={{ position: "relative" }}>
                   <label style={{ ...labelStyle, position: "absolute", top: "8px", left: "16px", marginBottom: 0, fontSize: "9px" }}>
-                    Country/Region
+                    Country/Region *
                   </label>
                   <select
                     value={country}
-                    onChange={e => setCountry(e.target.value)}
+                    onChange={e => handleCountryChange(e.target.value)}
                     style={{
                       ...inputStyle,
                       paddingTop: "22px",
@@ -316,12 +864,10 @@ export default function CheckoutPage() {
                       WebkitAppearance: "none",
                       cursor: "pointer"
                     }}
-                    onFocus={e => (e.target.style.borderColor = "var(--color-crimson)")}
-                    onBlur={e => (e.target.style.borderColor = "rgba(255,255,255,0.15)")}
                   >
-                    {COUNTRIES.map(c => (
-                      <option key={c} value={c} style={{ backgroundColor: "#111" }}>
-                        {c}
+                    {COUNTRIES_DATA.map(c => (
+                      <option key={c.name} value={c.name} style={{ backgroundColor: "#111", color: "#fff" }}>
+                        {c.name}
                       </option>
                     ))}
                   </select>
@@ -333,111 +879,216 @@ export default function CheckoutPage() {
                 </div>
 
                 {/* First / Last name row */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-                  <input
-                    type="text"
-                    placeholder="First name"
-                    style={inputStyle}
-                    onFocus={e => (e.target.style.borderColor = "var(--color-crimson)")}
-                    onBlur={e => (e.target.style.borderColor = "rgba(255,255,255,0.15)")}
-                  />
-                  <input
-                    type="text"
-                    placeholder="Last name"
-                    style={inputStyle}
-                    onFocus={e => (e.target.style.borderColor = "var(--color-crimson)")}
-                    onBlur={e => (e.target.style.borderColor = "rgba(255,255,255,0.15)")}
-                  />
+                <div className={styles.formGrid2}>
+                  <div>
+                    <input
+                      type="text"
+                      placeholder="First name *"
+                      value={firstName}
+                      onChange={e => {
+                        setFirstName(e.target.value);
+                        if (formErrors.firstName) setFormErrors({ ...formErrors, firstName: "" });
+                      }}
+                      className={formErrors.firstName ? styles.inputError : ""}
+                      style={inputStyle}
+                    />
+                    {formErrors.firstName && (
+                      <p style={{ fontSize: "11px", color: "var(--color-crimson)", marginTop: "4px" }}>
+                        {formErrors.firstName}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <input
+                      type="text"
+                      placeholder="Last name *"
+                      value={lastName}
+                      onChange={e => {
+                        setLastName(e.target.value);
+                        if (formErrors.lastName) setFormErrors({ ...formErrors, lastName: "" });
+                      }}
+                      className={formErrors.lastName ? styles.inputError : ""}
+                      style={inputStyle}
+                    />
+                    {formErrors.lastName && (
+                      <p style={{ fontSize: "11px", color: "var(--color-crimson)", marginTop: "4px" }}>
+                        {formErrors.lastName}
+                      </p>
+                    )}
+                  </div>
                 </div>
 
-                <input
-                  type="text"
-                  placeholder="Address"
-                  style={inputStyle}
-                  onFocus={e => (e.target.style.borderColor = "var(--color-crimson)")}
-                  onBlur={e => (e.target.style.borderColor = "rgba(255,255,255,0.15)")}
-                />
+                {/* Address */}
+                <div>
+                  <input
+                    type="text"
+                    placeholder="Address *"
+                    value={address}
+                    onChange={e => {
+                      setAddress(e.target.value);
+                      if (formErrors.address) setFormErrors({ ...formErrors, address: "" });
+                    }}
+                    className={formErrors.address ? styles.inputError : ""}
+                    style={inputStyle}
+                  />
+                  {formErrors.address && (
+                    <p style={{ fontSize: "11px", color: "var(--color-crimson)", marginTop: "4px" }}>
+                      {formErrors.address}
+                    </p>
+                  )}
+                </div>
+
                 <input
                   type="text"
                   placeholder="Apartment, suite, etc. (optional)"
+                  value={apartment}
+                  onChange={e => setApartment(e.target.value)}
                   style={inputStyle}
-                  onFocus={e => (e.target.style.borderColor = "var(--color-crimson)")}
-                  onBlur={e => (e.target.style.borderColor = "rgba(255,255,255,0.15)")}
                 />
 
                 {/* City / State / ZIP row */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px" }}>
-                  <input
-                    type="text"
-                    placeholder="City"
-                    style={inputStyle}
-                    onFocus={e => (e.target.style.borderColor = "var(--color-crimson)")}
-                    onBlur={e => (e.target.style.borderColor = "rgba(255,255,255,0.15)")}
-                  />
-                  <div style={{ position: "relative" }}>
-                    <select
-                      value={state}
-                      onChange={e => setState(e.target.value)}
-                      style={{
-                        ...inputStyle,
-                        appearance: "none",
-                        WebkitAppearance: "none",
-                        cursor: "pointer",
-                        color: state ? "var(--color-white)" : "rgba(255,255,255,0.4)"
+                <div className={styles.formGrid3}>
+                  <div className={styles.formCityCol}>
+                    <input
+                      type="text"
+                      placeholder="City *"
+                      value={city}
+                      onChange={e => {
+                        setCity(e.target.value);
+                        if (formErrors.city) setFormErrors({ ...formErrors, city: "" });
                       }}
-                      onFocus={e => (e.target.style.borderColor = "var(--color-crimson)")}
-                      onBlur={e => (e.target.style.borderColor = "rgba(255,255,255,0.15)")}
-                    >
-                      <option value="" style={{ backgroundColor: "#111" }}>State</option>
-                      {US_STATES.map(s => (
-                        <option key={s} value={s} style={{ backgroundColor: "#111" }}>
-                          {s}
-                        </option>
-                      ))}
-                    </select>
-                    <ChevronDown
-                      size={14}
-                      color="rgba(255,255,255,0.4)"
-                      style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}
+                      className={formErrors.city ? styles.inputError : ""}
+                      style={inputStyle}
                     />
+                    {formErrors.city && (
+                      <p style={{ fontSize: "11px", color: "var(--color-crimson)", marginTop: "4px" }}>
+                        {formErrors.city}
+                      </p>
+                    )}
                   </div>
-                  <input
-                    type="text"
-                    placeholder="ZIP code"
-                    style={inputStyle}
-                    onFocus={e => (e.target.style.borderColor = "var(--color-crimson)")}
-                    onBlur={e => (e.target.style.borderColor = "rgba(255,255,255,0.15)")}
-                  />
+
+                  {/* Dynamic State/Province based on Selected Country */}
+                  <div style={{ position: "relative" }}>
+                    {availableStates.length > 0 ? (
+                      <>
+                        <select
+                          value={state}
+                          onChange={e => {
+                            setState(e.target.value);
+                            if (formErrors.state) setFormErrors({ ...formErrors, state: "" });
+                          }}
+                          className={formErrors.state ? styles.inputError : ""}
+                          style={{
+                            ...inputStyle,
+                            appearance: "none",
+                            WebkitAppearance: "none",
+                            cursor: "pointer",
+                            color: state ? "var(--color-white)" : "rgba(255,255,255,0.4)"
+                          }}
+                        >
+                          <option value="" style={{ backgroundColor: "#111" }}>Select State/Province *</option>
+                          {availableStates.map(s => (
+                            <option key={s} value={s} style={{ backgroundColor: "#111", color: "#fff" }}>
+                              {s}
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown
+                          size={14}
+                          color="rgba(255,255,255,0.4)"
+                          style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}
+                        />
+                      </>
+                    ) : (
+                      <input
+                        type="text"
+                        placeholder="State / Region *"
+                        value={state}
+                        onChange={e => {
+                          setState(e.target.value);
+                          if (formErrors.state) setFormErrors({ ...formErrors, state: "" });
+                        }}
+                        className={formErrors.state ? styles.inputError : ""}
+                        style={inputStyle}
+                      />
+                    )}
+                    {formErrors.state && (
+                      <p style={{ fontSize: "11px", color: "var(--color-crimson)", marginTop: "4px" }}>
+                        {formErrors.state}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <input
+                      type="text"
+                      placeholder="ZIP / Postal code *"
+                      value={zip}
+                      onChange={e => {
+                        setZip(e.target.value);
+                        if (formErrors.zip) setFormErrors({ ...formErrors, zip: "" });
+                      }}
+                      className={formErrors.zip ? styles.inputError : ""}
+                      style={inputStyle}
+                    />
+                    {formErrors.zip && (
+                      <p style={{ fontSize: "11px", color: "var(--color-crimson)", marginTop: "4px" }}>
+                        {formErrors.zip}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
 
-              {/* Continue Button */}
-              <button
-                onClick={() => setActiveStep(1)}
-                style={{
-                  width: "100%",
-                  marginTop: "clamp(24px, 3.5vh, 36px)",
-                  backgroundColor: "var(--color-crimson)",
-                  color: "var(--color-white)",
-                  border: "none",
-                  borderRadius: "3px",
-                  padding: "16px",
-                  fontFamily: "var(--font-ui)",
-                  fontSize: "12px",
-                  fontWeight: 700,
-                  letterSpacing: "2.5px",
-                  textTransform: "uppercase",
-                  cursor: "pointer",
-                  boxShadow: "0 4px 20px rgba(227,38,26,0.4)",
-                  transition: "opacity 0.2s ease, transform 0.2s ease"
-                }}
-              >
-                CONTINUE TO SHIPPING
-              </button>
+              {/* Action Buttons */}
+              <div className={styles.actionButtons}>
+                <Link
+                  href="/cart"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px",
+                    padding: "15px 20px",
+                    border: "1px solid rgba(255,255,255,0.2)",
+                    borderRadius: "3px",
+                    color: "rgba(255,255,255,0.7)",
+                    fontFamily: "var(--font-ui)",
+                    fontSize: "11px",
+                    fontWeight: 700,
+                    letterSpacing: "2px",
+                    textDecoration: "none",
+                    textTransform: "uppercase"
+                  }}
+                >
+                  <ArrowLeft size={13} /> RETURN TO CART
+                </Link>
+                <button
+                  onClick={handleProceedToShipping}
+                  style={{
+                    flex: 1,
+                    backgroundColor: "var(--color-crimson)",
+                    color: "var(--color-white)",
+                    border: "none",
+                    borderRadius: "3px",
+                    padding: "16px",
+                    fontFamily: "var(--font-ui)",
+                    fontSize: "12px",
+                    fontWeight: 700,
+                    letterSpacing: "2.5px",
+                    textTransform: "uppercase",
+                    cursor: "pointer",
+                    boxShadow: "0 4px 20px rgba(227,38,26,0.4)",
+                    transition: "opacity 0.2s ease"
+                  }}
+                >
+                  CONTINUE TO SHIPPING
+                </button>
+              </div>
             </div>
           )}
 
-          {/* ── STEP 2: SHIPPING ─────────────────────────────────── */}
+          {/* ── STEP 2: SHIPPING METHODS ─────────────────────────── */}
           {activeStep === 1 && (
             <div>
               <h2
@@ -455,53 +1106,59 @@ export default function CheckoutPage() {
               </h2>
 
               <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "32px" }}>
-                {[
-                  { id: "standard", label: "Standard Shipping", sub: "5–7 business days", price: "$9.99" },
-                  { id: "express", label: "Express Shipping", sub: "2–3 business days", price: "$19.99" },
-                  { id: "overnight", label: "Overnight", sub: "Next business day", price: "$39.99" }
-                ].map((method, idx) => (
-                  <label
-                    key={method.id}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      padding: "14px 18px",
-                      border: idx === 0 ? "1px solid var(--color-crimson)" : "1px solid rgba(255,255,255,0.15)",
-                      borderRadius: "3px",
-                      cursor: "pointer",
-                      backgroundColor: idx === 0 ? "rgba(227,38,26,0.05)" : "transparent"
-                    }}
-                  >
-                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                      <div
-                        style={{
-                          width: "16px",
-                          height: "16px",
-                          borderRadius: "50%",
-                          border: idx === 0 ? "5px solid var(--color-crimson)" : "2px solid rgba(255,255,255,0.3)",
-                          flexShrink: 0
-                        }}
-                      />
-                      <div>
-                        <div style={{ fontSize: "14px", color: "var(--color-white)", fontFamily: "var(--font-body)" }}>
-                          {method.label}
-                        </div>
-                        <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", marginTop: "2px" }}>
-                          {method.sub}
+                {SHIPPING_OPTIONS.map((opt) => {
+                  const isSelected = shippingMethod === opt.id;
+                  const fee = getShippingFee(opt.id);
+                  const priceLabel = fee === 0 ? "FREE" : `$${fee.toFixed(2)}`;
+
+                  return (
+                    <div
+                      key={opt.id}
+                      onClick={() => setShippingMethod(opt.id)}
+                      className={`${styles.shippingOption} ${isSelected ? styles.shippingOptionActive : styles.shippingOptionInactive}`}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+                        <div
+                          style={{
+                            width: "18px",
+                            height: "18px",
+                            borderRadius: "50%",
+                            border: isSelected ? "5px solid var(--color-crimson)" : "2px solid rgba(255,255,255,0.3)",
+                            backgroundColor: isSelected ? "var(--color-crimson)" : "transparent",
+                            flexShrink: 0,
+                            transition: "all 0.2s ease"
+                          }}
+                        />
+                        <div>
+                          <div style={{ fontSize: "14px", fontWeight: isSelected ? 700 : 500, color: "var(--color-white)", fontFamily: "var(--font-body)" }}>
+                            {opt.label}
+                          </div>
+                          <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", marginTop: "2px" }}>
+                            {opt.sub}
+                          </div>
                         </div>
                       </div>
+                      <span
+                        style={{
+                          fontFamily: "var(--font-ui)",
+                          fontWeight: 700,
+                          fontSize: "14px",
+                          color: fee === 0 ? "var(--color-crimson)" : "var(--color-white)"
+                        }}
+                      >
+                        {priceLabel}
+                      </span>
                     </div>
-                    <span style={{ fontFamily: "var(--font-ui)", fontWeight: 700, fontSize: "14px", color: "var(--color-white)" }}>
-                      {method.price}
-                    </span>
-                  </label>
-                ))}
+                  );
+                })}
               </div>
 
-              <div style={{ display: "flex", gap: "12px" }}>
+              <div className={styles.actionButtons}>
                 <button
-                  onClick={() => setActiveStep(0)}
+                  onClick={() => {
+                    setActiveStep(0);
+                    setStepErrorAlert("");
+                  }}
                   style={{
                     flex: 1,
                     backgroundColor: "transparent",
@@ -520,9 +1177,9 @@ export default function CheckoutPage() {
                   ← BACK
                 </button>
                 <button
-                  onClick={() => setActiveStep(2)}
+                  onClick={handleProceedToPayment}
                   style={{
-                    flex: 3,
+                    flex: 2,
                     backgroundColor: "var(--color-crimson)",
                     color: "var(--color-white)",
                     border: "none",
@@ -543,7 +1200,7 @@ export default function CheckoutPage() {
             </div>
           )}
 
-          {/* ── STEP 3: PAYMENT ──────────────────────────────────── */}
+          {/* ── STEP 3: PAYMENT DETAILS ──────────────────────────── */}
           {activeStep === 2 && (
             <div>
               <h2
@@ -561,41 +1218,98 @@ export default function CheckoutPage() {
               </h2>
 
               <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "32px" }}>
-                <input
-                  type="text"
-                  placeholder="Card number"
-                  style={inputStyle}
-                  onFocus={e => (e.target.style.borderColor = "var(--color-crimson)")}
-                  onBlur={e => (e.target.style.borderColor = "rgba(255,255,255,0.15)")}
-                />
-                <input
-                  type="text"
-                  placeholder="Name on card"
-                  style={inputStyle}
-                  onFocus={e => (e.target.style.borderColor = "var(--color-crimson)")}
-                  onBlur={e => (e.target.style.borderColor = "rgba(255,255,255,0.15)")}
-                />
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                <div>
                   <input
                     type="text"
-                    placeholder="MM / YY"
+                    placeholder="Card number (16 digits) *"
+                    value={cardNumber}
+                    maxLength={19}
+                    onChange={e => {
+                      // Auto format card number spaces
+                      const v = e.target.value.replace(/\D/g, "").slice(0, 16);
+                      const formatted = v.match(/.{1,4}/g)?.join(" ") || v;
+                      setCardNumber(formatted);
+                      if (formErrors.cardNumber) setFormErrors({ ...formErrors, cardNumber: "" });
+                    }}
+                    className={formErrors.cardNumber ? styles.inputError : ""}
                     style={inputStyle}
-                    onFocus={e => (e.target.style.borderColor = "var(--color-crimson)")}
-                    onBlur={e => (e.target.style.borderColor = "rgba(255,255,255,0.15)")}
                   />
+                  {formErrors.cardNumber && (
+                    <p style={{ fontSize: "11px", color: "var(--color-crimson)", marginTop: "4px" }}>
+                      {formErrors.cardNumber}
+                    </p>
+                  )}
+                </div>
+
+                <div>
                   <input
                     type="text"
-                    placeholder="CVC"
+                    placeholder="Name on card *"
+                    value={cardName}
+                    onChange={e => {
+                      setCardName(e.target.value);
+                      if (formErrors.cardName) setFormErrors({ ...formErrors, cardName: "" });
+                    }}
+                    className={formErrors.cardName ? styles.inputError : ""}
                     style={inputStyle}
-                    onFocus={e => (e.target.style.borderColor = "var(--color-crimson)")}
-                    onBlur={e => (e.target.style.borderColor = "rgba(255,255,255,0.15)")}
                   />
+                  {formErrors.cardName && (
+                    <p style={{ fontSize: "11px", color: "var(--color-crimson)", marginTop: "4px" }}>
+                      {formErrors.cardName}
+                    </p>
+                  )}
+                </div>
+
+                <div className={styles.formGrid2}>
+                  <div>
+                    <input
+                      type="text"
+                      placeholder="MM / YY *"
+                      maxLength={5}
+                      value={cardExpiry}
+                      onChange={e => {
+                        let v = e.target.value.replace(/\D/g, "").slice(0, 4);
+                        if (v.length >= 3) v = `${v.slice(0, 2)}/${v.slice(2)}`;
+                        setCardExpiry(v);
+                        if (formErrors.cardExpiry) setFormErrors({ ...formErrors, cardExpiry: "" });
+                      }}
+                      className={formErrors.cardExpiry ? styles.inputError : ""}
+                      style={inputStyle}
+                    />
+                    {formErrors.cardExpiry && (
+                      <p style={{ fontSize: "11px", color: "var(--color-crimson)", marginTop: "4px" }}>
+                        {formErrors.cardExpiry}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <input
+                      type="text"
+                      placeholder="CVC (3 digits) *"
+                      maxLength={4}
+                      value={cardCvc}
+                      onChange={e => {
+                        setCardCvc(e.target.value.replace(/\D/g, "").slice(0, 4));
+                        if (formErrors.cardCvc) setFormErrors({ ...formErrors, cardCvc: "" });
+                      }}
+                      className={formErrors.cardCvc ? styles.inputError : ""}
+                      style={inputStyle}
+                    />
+                    {formErrors.cardCvc && (
+                      <p style={{ fontSize: "11px", color: "var(--color-crimson)", marginTop: "4px" }}>
+                        {formErrors.cardCvc}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
 
-              <div style={{ display: "flex", gap: "12px" }}>
+              <div className={styles.actionButtons}>
                 <button
-                  onClick={() => setActiveStep(1)}
+                  onClick={() => {
+                    setActiveStep(1);
+                    setStepErrorAlert("");
+                  }}
                   style={{
                     flex: 1,
                     backgroundColor: "transparent",
@@ -614,8 +1328,9 @@ export default function CheckoutPage() {
                   ← BACK
                 </button>
                 <button
+                  onClick={handlePlaceOrder}
                   style={{
-                    flex: 3,
+                    flex: 2,
                     backgroundColor: "var(--color-crimson)",
                     color: "var(--color-white)",
                     border: "none",
@@ -630,6 +1345,7 @@ export default function CheckoutPage() {
                     boxShadow: "0 4px 20px rgba(227,38,26,0.4)"
                   }}
                 >
+                  <Lock size={13} style={{ display: "inline", marginRight: "6px", verticalAlign: "middle" }} />
                   PLACE ORDER — ${total.toFixed(2)}
                 </button>
               </div>
@@ -637,17 +1353,8 @@ export default function CheckoutPage() {
           )}
         </div>
 
-        {/* ── RIGHT COLUMN: ORDER SUMMARY ───────────────────────── */}
-        <div
-          style={{
-            backgroundColor: "rgba(255,255,255,0.03)",
-            border: "1px solid rgba(255,255,255,0.1)",
-            borderRadius: "4px",
-            padding: "clamp(20px, 3vw, 32px)",
-            position: "sticky",
-            top: "88px"
-          }}
-        >
+        {/* ── RIGHT COLUMN: ORDER SUMMARY (DESKTOP ONLY) ────────── */}
+        <div className={styles.desktopSummary}>
           <h2
             className="font-display"
             style={{
@@ -664,7 +1371,7 @@ export default function CheckoutPage() {
 
           {/* Cart Items */}
           <div style={{ display: "flex", flexDirection: "column", gap: "0" }}>
-            {CART_ITEMS.map((item, idx) => (
+            {items.map((item, idx) => (
               <div
                 key={item.id}
                 style={{
@@ -672,7 +1379,7 @@ export default function CheckoutPage() {
                   alignItems: "center",
                   gap: "14px",
                   padding: "14px 0",
-                  borderBottom: idx < CART_ITEMS.length - 1 ? "1px solid rgba(255,255,255,0.07)" : "none"
+                  borderBottom: idx < items.length - 1 ? "1px solid rgba(255,255,255,0.07)" : "none"
                 }}
               >
                 {/* Product image */}
@@ -687,13 +1394,15 @@ export default function CheckoutPage() {
                     position: "relative"
                   }}
                 >
-                  <Image
-                    src={item.image}
-                    alt={item.name}
-                    fill
-                    style={{ objectFit: "cover" }}
-                    sizes="60px"
-                  />
+                  {item.image && (
+                    <Image
+                      src={item.image}
+                      alt={item.name}
+                      fill
+                      style={{ objectFit: "cover" }}
+                      sizes="60px"
+                    />
+                  )}
                 </div>
 
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -712,7 +1421,7 @@ export default function CheckoutPage() {
                     {item.name}
                   </div>
                   <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.45)", fontFamily: "var(--font-body)" }}>
-                    {item.variant}
+                    {item.variant} • Qty: {item.quantity}
                   </div>
                 </div>
 
@@ -796,10 +1505,10 @@ export default function CheckoutPage() {
             </div>
             <div style={{ display: "flex", justifyContent: "space-between" }}>
               <span style={{ fontSize: "12px", letterSpacing: "1.5px", color: "rgba(255,255,255,0.5)", fontFamily: "var(--font-ui)", fontWeight: 700 }}>
-                SHIPPING
+                SHIPPING ({SHIPPING_OPTIONS.find(o => o.id === shippingMethod)?.label})
               </span>
-              <span style={{ fontSize: "13px", color: "var(--color-white)", fontFamily: "var(--font-ui)", fontWeight: 700 }}>
-                ${SHIPPING_COST.toFixed(2)}
+              <span style={{ fontSize: "13px", color: currentShippingCost === 0 ? "var(--color-crimson)" : "var(--color-white)", fontFamily: "var(--font-ui)", fontWeight: 700 }}>
+                {currentShippingCost === 0 ? "FREE" : `$${currentShippingCost.toFixed(2)}`}
               </span>
             </div>
           </div>
@@ -840,29 +1549,17 @@ export default function CheckoutPage() {
             </span>
           </div>
 
-          {/* Continue CTA (mirrors form button) */}
-          <button
-            onClick={() => activeStep < 2 && setActiveStep(prev => prev + 1)}
-            style={{
-              width: "100%",
-              backgroundColor: "var(--color-crimson)",
-              color: "var(--color-white)",
-              border: "none",
-              borderRadius: "3px",
-              padding: "15px",
-              fontFamily: "var(--font-ui)",
-              fontSize: "12px",
-              fontWeight: 700,
-              letterSpacing: "2.5px",
-              textTransform: "uppercase",
-              cursor: "pointer",
-              boxShadow: "0 4px 20px rgba(227,38,26,0.4)"
-            }}
-          >
-            {activeStep === 0 && "CONTINUE TO SHIPPING"}
-            {activeStep === 1 && "CONTINUE TO PAYMENT"}
-            {activeStep === 2 && `PLACE ORDER — $${total.toFixed(2)}`}
-          </button>
+          {/* Trust Guarantees */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "10px", borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: "16px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", color: "rgba(255,255,255,0.6)" }}>
+              <ShieldCheck size={16} color="var(--color-crimson)" />
+              <span>256-bit encrypted secure checkout</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", color: "rgba(255,255,255,0.6)" }}>
+              <Truck size={16} color="rgba(255,255,255,0.4)" />
+              <span>Tracked worldwide delivery from Tokyo & LA</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>

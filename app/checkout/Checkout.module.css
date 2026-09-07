@@ -1,0 +1,320 @@
+/* Checkout Flow Responsive CSS Module */
+
+.container {
+  background-color: var(--color-void);
+  color: var(--color-white);
+  min-height: calc(100vh - 64px);
+  padding: clamp(24px, 4vw, 64px) clamp(16px, 4vw, 60px);
+}
+
+.mainGrid {
+  max-width: 1200px;
+  margin: 0 auto;
+  align-items: flex-start;
+  width: 100%;
+}
+
+@media (min-width: 1024px) {
+  .mainGrid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.85fr);
+    gap: clamp(28px, 4vw, 64px);
+  }
+}
+
+/* Centered layout on tablet and mobile screens */
+@media (max-width: 1023px) {
+  .mainGrid {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+}
+
+.formColumn {
+  width: 100%;
+}
+
+/* Mobile Collapsible Summary Toggle & Content */
+.mobileSummaryToggle {
+  display: none;
+}
+
+.mobileSummaryContent {
+  display: none;
+}
+
+@media (max-width: 1023px) {
+  .mobileSummaryToggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    background-color: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 4px;
+    cursor: pointer;
+    user-select: none;
+    margin-bottom: 24px;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+  }
+
+  .mobileSummaryToggle:hover {
+    background-color: rgba(255, 255, 255, 0.07);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .mobileSummaryContent {
+    display: block;
+    background-color: rgba(255, 255, 255, 0.025);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    padding: 18px;
+    margin-bottom: 24px;
+    animation: fadeIn 0.25s ease-in-out;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Desktop Sticky Summary Panel */
+.desktopSummary {
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  padding: clamp(20px, 3vw, 32px);
+}
+
+@media (min-width: 1024px) {
+  .desktopSummary {
+    display: block;
+    position: sticky;
+    top: 88px;
+  }
+}
+
+@media (max-width: 1023px) {
+  .desktopSummary {
+    display: none;
+  }
+}
+
+/* Step Progress Indicator */
+.stepsBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 4px;
+}
+
+.stepsBar::-webkit-scrollbar {
+  display: none;
+}
+
+.stepBtn {
+  background: none;
+  border: none;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.stepConnector {
+  flex: 1;
+  min-width: 16px;
+  height: 2px;
+  background-color: rgba(255, 255, 255, 0.12);
+  position: relative;
+}
+
+/* Form Layout Grids */
+.formGrid2 {
+  display: grid;
+  gap: 10px;
+}
+
+@media (min-width: 520px) {
+  .formGrid2 {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 519px) {
+  .formGrid2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.formGrid3 {
+  display: grid;
+  gap: 10px;
+}
+
+@media (min-width: 640px) {
+  .formGrid3 {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}
+
+@media (max-width: 639px) {
+  .formGrid3 {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.formCityCol {
+  grid-column: span 1;
+}
+
+@media (max-width: 639px) {
+  .formCityCol {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Error States */
+.inputError {
+  border-color: var(--color-crimson) !important;
+  background-color: rgba(227, 38, 26, 0.04) !important;
+}
+
+.alertBox {
+  background-color: rgba(227, 38, 26, 0.1);
+  border: 1px solid var(--color-crimson);
+  border-radius: 3px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  font-size: 13px;
+  color: var(--color-white);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: fadeIn 0.2s ease;
+}
+
+/* Shipping Option Radio Card */
+.shippingOption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.shippingOptionActive {
+  border: 1px solid var(--color-crimson) !important;
+  background-color: rgba(227, 38, 26, 0.06) !important;
+}
+
+.shippingOptionInactive {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background-color: transparent;
+}
+
+.shippingOptionInactive:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+/* Action buttons */
+.actionButtons {
+  display: flex;
+  gap: 12px;
+  margin-top: clamp(24px, 3.5vh, 36px);
+}
+
+@media (max-width: 480px) {
+  .actionButtons {
+    flex-direction: column-reverse;
+    gap: 10px;
+  }
+}
+
+/* Summary item list row */
+.summaryItemRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.summaryItemRow:last-child {
+  border-bottom: none;
+}
+
+/* ── ORDER CONFIRMATION & RECEIPT ─────────────────────────── */
+.confirmationWrapper {
+  max-width: 680px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.receiptCard {
+  background-color: #0d0d0d;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+  padding: clamp(20px, 4vw, 36px);
+  position: relative;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+}
+
+.receiptRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+}
+
+/* Print styles for downloadable/printable receipt */
+@media print {
+  :global(body) {
+    background-color: #fff !important;
+    color: #000 !important;
+  }
+
+  .container {
+    padding: 0 !important;
+    background-color: #fff !important;
+    color: #000 !important;
+  }
+
+  .confirmationActions,
+  :global(header),
+  :global(footer),
+  :global(nav) {
+    display: none !important;
+  }
+
+  .receiptCard {
+    border: 1px solid #ddd !important;
+    background-color: #fff !important;
+    color: #000 !important;
+    box-shadow: none !important;
+    padding: 20px !important;
+  }
+
+  .receiptCard :global(*) {
+    color: #000 !important;
+  }
+}

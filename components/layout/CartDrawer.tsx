@@ -4,11 +4,12 @@ import React, { useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCartStore } from "@/store/cart-store";
-import { X, Plus, Minus, Trash2, ShoppingBag, ArrowRight, ShieldCheck } from "lucide-react";
+import { ChevronDown, X, Plus, Minus, Trash2, ShoppingBag, ArrowRight, ShieldCheck } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
+import { Size } from "@/types/product";
 
 export const CartDrawer: React.FC = () => {
-  const { items, isOpen, closeCart, removeItem, updateQuantity, getSubtotal, getItemCount } =
+  const { items, isOpen, closeCart, removeItem, updateQuantity, updateSize, getSubtotal, getItemCount } =
     useCartStore();
 
   const subtotal = getSubtotal();
@@ -248,9 +249,47 @@ export const CartDrawer: React.FC = () => {
                         <Trash2 size={14} />
                       </button>
                     </div>
-                    <p className="font-meta" style={{ fontSize: "11px", color: "var(--color-mist)", marginTop: "2px" }}>
-                      SIZE: {item.selectedSize} • {item.selectedColor.name}
-                    </p>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "4px" }}>
+                      <span className="font-meta" style={{ fontSize: "11px", color: "var(--color-mist)" }}>
+                        SIZE:
+                      </span>
+                      <div style={{ position: "relative", display: "inline-flex", alignItems: "center" }}>
+                        <select
+                          value={item.selectedSize}
+                          onChange={(e) => updateSize(item.id, e.target.value as Size)}
+                          style={{
+                            backgroundColor: "rgba(255, 255, 255, 0.08)",
+                            border: "1px solid rgba(255, 255, 255, 0.2)",
+                            borderRadius: "2px",
+                            color: "var(--color-white)",
+                            fontSize: "11px",
+                            fontWeight: "bold",
+                            fontFamily: "var(--font-ui)",
+                            padding: "1px 18px 1px 6px",
+                            appearance: "none",
+                            WebkitAppearance: "none",
+                            cursor: "pointer",
+                            outline: "none"
+                          }}
+                          aria-label={`Change size for ${item.product.name}`}
+                        >
+                          {(item.product.availableSizes && item.product.availableSizes.length > 0
+                            ? item.product.availableSizes
+                            : item.product.sizes && item.product.sizes.length > 0
+                            ? item.product.sizes
+                            : (["XS", "S", "M", "L", "XL", "XXL"] as Size[])
+                          ).map((sz) => (
+                            <option key={sz} value={sz} style={{ backgroundColor: "#111", color: "#fff" }}>
+                              {sz}
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown size={10} color="var(--color-mist)" style={{ position: "absolute", right: "4px", pointerEvents: "none" }} />
+                      </div>
+                      <span className="font-meta" style={{ fontSize: "11px", color: "var(--color-mist)" }}>
+                        • {item.selectedColor.name}
+                      </span>
+                    </div>
                   </div>
 
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "8px" }}>
