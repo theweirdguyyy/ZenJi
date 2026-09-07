@@ -6,10 +6,12 @@ import Image from "next/image";
 import { useCartStore } from "@/store/cart-store";
 import { useWishlistStore } from "@/store/wishlist-store";
 import { formatCurrency } from "@/lib/utils";
+import { Size } from "@/types/product";
 import {
   Minus, Plus, Trash2, Heart, ArrowLeft,
-  Lock, Shield, RotateCcw, Truck, CreditCard
+  Lock, Shield, RotateCcw, Truck, CreditCard, ChevronDown
 } from "lucide-react";
+import styles from "./Cart.module.css";
 
 const SHIPPING_COST = 9.99;
 
@@ -34,32 +36,21 @@ const rowLabelStyle: React.CSSProperties = {
 };
 
 export default function CartPage() {
-  const { items, removeItem, updateQuantity, getSubtotal, getItemCount } = useCartStore();
+  const { items, removeItem, updateQuantity, updateSize, getSubtotal, getItemCount } = useCartStore();
   const { toggleWishlist } = useWishlistStore();
   const subtotal = getSubtotal();
   const itemCount = getItemCount();
   const discount = 0;
-  const estimatedTotal = subtotal + (items.length > 0 ? SHIPPING_COST : 0) - discount;
+  const FREE_SHIPPING_THRESHOLD = 150;
+  const isFreeShipping = subtotal >= FREE_SHIPPING_THRESHOLD;
+  const shippingAmount = items.length === 0 ? 0 : isFreeShipping ? 0 : SHIPPING_COST;
+  const estimatedTotal = subtotal + shippingAmount - discount;
 
   return (
-    <div
-      style={{
-        backgroundColor: "var(--color-void)",
-        color: "var(--color-white)",
-        minHeight: "calc(100vh - 64px)",
-        position: "relative"
-      }}
-    >
+    <div className={styles.container}>
       {/* ── HERO HEADER with background artwork ───────────────────── */}
-      <div
-        style={{
-          position: "relative",
-          width: "100%",
-          height: "clamp(140px, 20vw, 220px)",
-          overflow: "hidden"
-        }}
-      >
-        {/* Background artwork — story_background.png suits the samurai warrior aesthetic */}
+      <div className={styles.hero}>
+        {/* Background artwork */}
         <Image
           src="/story_background.png"
           alt="ZENJI Cart Background"
@@ -73,45 +64,19 @@ export default function CartPage() {
           sizes="100vw"
         />
         {/* Gradient fade to page bg */}
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background:
-              "linear-gradient(180deg, rgba(5,5,5,0.3) 0%, rgba(5,5,5,0.85) 100%)"
-          }}
-        />
+        <div className={styles.heroOverlay} />
 
-        {/* Vertical Japanese text — decoration, right side */}
-        <div
-          style={{
-            position: "absolute",
-            right: "clamp(16px, 3vw, 48px)",
-            top: "50%",
-            transform: "translateY(-50%)",
-            writingMode: "vertical-rl",
-            fontSize: "clamp(16px, 2.5vw, 28px)",
-            color: "rgba(255,255,255,0.12)",
-            letterSpacing: "6px",
-            fontFamily: "var(--font-body)",
-            userSelect: "none"
-          }}
-        >
+        {/* Vertical Japanese text — hidden on small mobile */}
+        <div className={styles.heroJapanese}>
           影の力を繋ぎ
         </div>
 
         {/* Title overlay */}
-        <div
-          style={{
-            position: "absolute",
-            bottom: "clamp(20px, 3vw, 32px)",
-            left: "clamp(20px, 4vw, 60px)"
-          }}
-        >
+        <div className={styles.heroTitleBox}>
           <h1
             className="font-display"
             style={{
-              fontSize: "clamp(36px, 6vw, 72px)",
+              fontSize: "clamp(32px, 5.5vw, 68px)",
               fontWeight: 900,
               lineHeight: 1,
               letterSpacing: "2px",
@@ -147,13 +112,7 @@ export default function CartPage() {
       </div>
 
       {/* ── MAIN CONTENT ──────────────────────────────────────────── */}
-      <div
-        style={{
-          maxWidth: "1280px",
-          margin: "0 auto",
-          padding: "clamp(20px, 3vw, 40px) clamp(16px, 4vw, 60px)"
-        }}
-      >
+      <div className={styles.mainContent}>
         {items.length === 0 ? (
           /* ── EMPTY CART STATE ─────────────────────────────────── */
           <div
@@ -214,28 +173,11 @@ export default function CartPage() {
             </Link>
           </div>
         ) : (
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "minmax(0, 1.5fr) minmax(0, 0.8fr)",
-              gap: "clamp(20px, 3vw, 48px)",
-              alignItems: "flex-start"
-            }}
-          >
-            {/* ── LEFT: CART ITEMS TABLE ──────────────────────────── */}
+          <div className={styles.cartGrid}>
+            {/* ── LEFT: CART ITEMS TABLE / CARDS ─────────────────── */}
             <div>
-              {/* Table Header */}
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "80px 1fr auto auto auto",
-                  gap: "12px",
-                  alignItems: "center",
-                  padding: "10px 0",
-                  borderBottom: "1px solid rgba(255,255,255,0.08)",
-                  marginBottom: "8px"
-                }}
-              >
+              {/* Table Header (Desktop Only) */}
+              <div className={styles.tableHeader}>
                 <span />
                 <span style={rowLabelStyle}>PRODUCT</span>
                 <span style={{ ...rowLabelStyle, textAlign: "right" }}>PRICE</span>
@@ -249,29 +191,9 @@ export default function CartPage() {
                 const thumbSrc = item.product.images?.[0] || "";
 
                 return (
-                  <div
-                    key={item.id}
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "80px 1fr auto auto auto",
-                      gap: "12px",
-                      alignItems: "center",
-                      padding: "18px 0",
-                      borderBottom: "1px solid rgba(255,255,255,0.06)"
-                    }}
-                  >
+                  <div key={item.id} className={styles.cartItemRow}>
                     {/* Thumbnail */}
-                    <div
-                      style={{
-                        width: "72px",
-                        height: "80px",
-                        borderRadius: "3px",
-                        overflow: "hidden",
-                        backgroundColor: "rgba(255,255,255,0.04)",
-                        position: "relative",
-                        flexShrink: 0
-                      }}
-                    >
+                    <div className={styles.itemThumb}>
                       {thumbSrc && (
                         <Image
                           src={thumbSrc}
@@ -283,8 +205,8 @@ export default function CartPage() {
                       )}
                     </div>
 
-                    {/* Product Info */}
-                    <div>
+                    {/* Product Details */}
+                    <div className={styles.itemInfo}>
                       <p
                         className="font-display"
                         style={{
@@ -298,6 +220,17 @@ export default function CartPage() {
                       >
                         {item.product.name}
                       </p>
+
+                      {/* Mobile Unit Price */}
+                      <div className={styles.mobileUnitPrice}>
+                        <span>${item.product.price.toFixed(2)}</span>
+                        {item.quantity > 1 && (
+                          <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.45)", fontWeight: 500 }}>
+                            each
+                          </span>
+                        )}
+                      </div>
+
                       <p
                         style={{
                           fontSize: "11px",
@@ -308,16 +241,76 @@ export default function CartPage() {
                       >
                         COLOR: {item.selectedColor.name.toUpperCase()}
                       </p>
-                      <p
+
+                      {/* Editable Size Selector */}
+                      <div
                         style={{
-                          fontSize: "11px",
-                          color: "rgba(255,255,255,0.45)",
-                          fontFamily: "var(--font-body)",
-                          marginBottom: "10px"
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "6px",
+                          marginBottom: "8px"
                         }}
                       >
-                        SIZE: {item.selectedSize}
-                      </p>
+                        <span
+                          style={{
+                            fontSize: "11px",
+                            color: "rgba(255,255,255,0.45)",
+                            fontFamily: "var(--font-body)",
+                            fontWeight: 600
+                          }}
+                        >
+                          SIZE:
+                        </span>
+                        <div style={{ position: "relative", display: "inline-flex", alignItems: "center" }}>
+                          <select
+                            value={item.selectedSize}
+                            onChange={(e) => updateSize(item.id, e.target.value as Size)}
+                            style={{
+                              backgroundColor: "rgba(255,255,255,0.06)",
+                              border: "1px solid rgba(255,255,255,0.2)",
+                              borderRadius: "3px",
+                              color: "var(--color-white)",
+                              fontSize: "11px",
+                              fontWeight: 700,
+                              fontFamily: "var(--font-ui)",
+                              padding: "2px 22px 2px 8px",
+                              appearance: "none",
+                              WebkitAppearance: "none",
+                              cursor: "pointer",
+                              outline: "none",
+                              transition: "border-color 0.2s ease"
+                            }}
+                            onFocus={(e) => (e.target.style.borderColor = "var(--color-crimson)")}
+                            onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.2)")}
+                            aria-label={`Change size for ${item.product.name}`}
+                          >
+                            {(item.product.availableSizes && item.product.availableSizes.length > 0
+                              ? item.product.availableSizes
+                              : item.product.sizes && item.product.sizes.length > 0
+                              ? item.product.sizes
+                              : (["XS", "S", "M", "L", "XL", "XXL"] as Size[])
+                            ).map((sizeOption) => (
+                              <option
+                                key={sizeOption}
+                                value={sizeOption}
+                                style={{ backgroundColor: "#111111", color: "#ffffff" }}
+                              >
+                                {sizeOption}
+                              </option>
+                            ))}
+                          </select>
+                          <ChevronDown
+                            size={12}
+                            color="rgba(255,255,255,0.5)"
+                            style={{
+                              position: "absolute",
+                              right: "6px",
+                              pointerEvents: "none"
+                            }}
+                          />
+                        </div>
+                      </div>
+
                       {/* Move to Wishlist */}
                       <button
                         onClick={() => {
@@ -347,94 +340,36 @@ export default function CartPage() {
                       </button>
                     </div>
 
-                    {/* Price */}
-                    <div
-                      style={{
-                        fontFamily: "var(--font-ui)",
-                        fontSize: "14px",
-                        fontWeight: 700,
-                        color: "var(--color-white)",
-                        textAlign: "right",
-                        minWidth: "60px"
-                      }}
-                    >
+                    {/* Desktop Columns: Price */}
+                    <div className={styles.desktopColPrice}>
                       ${item.product.price.toFixed(2)}
                     </div>
 
-                    {/* Quantity Stepper */}
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "0",
-                        border: "1px solid rgba(255,255,255,0.15)",
-                        borderRadius: "3px",
-                        overflow: "hidden",
-                        minWidth: "100px"
-                      }}
-                    >
-                      <button
-                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                        style={{
-                          width: "30px",
-                          height: "34px",
-                          background: "none",
-                          border: "none",
-                          color: "rgba(255,255,255,0.6)",
-                          cursor: "pointer",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          fontSize: "16px",
-                          transition: "background 0.2s"
-                        }}
-                      >
-                        <Minus size={12} />
-                      </button>
-                      <span
-                        style={{
-                          flex: 1,
-                          textAlign: "center",
-                          fontFamily: "var(--font-ui)",
-                          fontSize: "13px",
-                          fontWeight: 700,
-                          color: "var(--color-white)",
-                          borderLeft: "1px solid rgba(255,255,255,0.1)",
-                          borderRight: "1px solid rgba(255,255,255,0.1)",
-                          padding: "8px 4px"
-                        }}
-                      >
-                        {item.quantity}
-                      </span>
-                      <button
-                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                        style={{
-                          width: "30px",
-                          height: "34px",
-                          background: "none",
-                          border: "none",
-                          color: "rgba(255,255,255,0.6)",
-                          cursor: "pointer",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          transition: "background 0.2s"
-                        }}
-                      >
-                        <Plus size={12} />
-                      </button>
+                    {/* Desktop Columns: Quantity Stepper */}
+                    <div className={styles.desktopColQty}>
+                      <div className={styles.stepper}>
+                        <button
+                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                          className={styles.stepperBtn}
+                          aria-label="Decrease quantity"
+                        >
+                          <Minus size={12} />
+                        </button>
+                        <span className={styles.stepperCount}>
+                          {item.quantity}
+                        </span>
+                        <button
+                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                          className={styles.stepperBtn}
+                          aria-label="Increase quantity"
+                        >
+                          <Plus size={12} />
+                        </button>
+                      </div>
                     </div>
 
-                    {/* Total + Remove */}
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "flex-end",
-                        gap: "8px",
-                        minWidth: "60px"
-                      }}
-                    >
+                    {/* Desktop Columns: Total + Remove */}
+                    <div className={styles.desktopColTotal}>
                       <span
                         style={{
                           fontFamily: "var(--font-ui)",
@@ -447,20 +382,48 @@ export default function CartPage() {
                       </span>
                       <button
                         onClick={() => removeItem(item.id)}
-                        style={{
-                          background: "none",
-                          border: "none",
-                          color: "rgba(255,255,255,0.3)",
-                          cursor: "pointer",
-                          padding: "2px",
-                          transition: "color 0.2s ease"
-                        }}
-                        onMouseEnter={e => ((e.currentTarget as HTMLButtonElement).style.color = "var(--color-crimson)")}
-                        onMouseLeave={e => ((e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.3)")}
+                        className={styles.removeBtn}
                         aria-label="Remove item"
                       >
                         <Trash2 size={14} />
                       </button>
+                    </div>
+
+                    {/* Mobile Controls Row (spanning across bottom of mobile card) */}
+                    <div className={styles.mobileControlsRow}>
+                      <div className={styles.stepper}>
+                        <button
+                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                          className={styles.stepperBtn}
+                          aria-label="Decrease quantity"
+                        >
+                          <Minus size={12} />
+                        </button>
+                        <span className={styles.stepperCount}>
+                          {item.quantity}
+                        </span>
+                        <button
+                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                          className={styles.stepperBtn}
+                          aria-label="Increase quantity"
+                        >
+                          <Plus size={12} />
+                        </button>
+                      </div>
+
+                      <div className={styles.mobilePriceTotalGroup}>
+                        <div style={{ textAlign: "right" }}>
+                          <span className={styles.mobileTotalLabel}>TOTAL </span>
+                          <span className={styles.mobileTotalValue}>${itemTotal.toFixed(2)}</span>
+                        </div>
+                        <button
+                          onClick={() => removeItem(item.id)}
+                          className={styles.mobileRemoveBtn}
+                          aria-label="Remove item"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 );
@@ -492,16 +455,7 @@ export default function CartPage() {
             </div>
 
             {/* ── RIGHT: ORDER SUMMARY ──────────────────────────────── */}
-            <div
-              style={{
-                backgroundColor: "rgba(255,255,255,0.025)",
-                border: "1px solid rgba(255,255,255,0.1)",
-                borderRadius: "4px",
-                padding: "clamp(20px, 3vw, 32px)",
-                position: "sticky",
-                top: "88px"
-              }}
-            >
+            <div className={styles.summaryCard}>
               <h2
                 className="font-display"
                 style={{
@@ -529,14 +483,19 @@ export default function CartPage() {
               </div>
 
               {/* Row: Shipping */}
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "12px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: items.length > 0 && !isFreeShipping ? "4px" : "12px" }}>
                 <span style={{ fontSize: "11px", letterSpacing: "1.5px", color: "rgba(255,255,255,0.5)", fontFamily: "var(--font-ui)", fontWeight: 700 }}>
                   SHIPPING
                 </span>
-                <span style={{ fontFamily: "var(--font-body)", fontSize: "12px", color: "rgba(255,255,255,0.5)" }}>
-                  CALCULATED AT CHECKOUT
+                <span style={{ fontFamily: "var(--font-ui)", fontSize: "13px", fontWeight: 700, color: isFreeShipping ? "var(--color-crimson)" : "var(--color-white)" }}>
+                  {items.length === 0 ? "—" : isFreeShipping ? "FREE" : formatCurrency(SHIPPING_COST)}
                 </span>
               </div>
+              {items.length > 0 && !isFreeShipping && (
+                <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.45)", fontFamily: "var(--font-body)", marginBottom: "12px" }}>
+                  Add <strong style={{ color: "var(--color-crimson)" }}>{formatCurrency(FREE_SHIPPING_THRESHOLD - subtotal)}</strong> more for free shipping
+                </p>
+              )}
 
               {/* Row: Discount */}
               <div
@@ -689,32 +648,11 @@ export default function CartPage() {
 
         {/* ── TRUST BADGES STRIP ──────────────────────────────────── */}
         {items.length > 0 && (
-          <div
-            style={{
-              marginTop: "clamp(32px, 5vw, 60px)",
-              paddingTop: "clamp(24px, 3vw, 36px)",
-              borderTop: "1px solid rgba(255,255,255,0.06)",
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-              gap: "20px"
-            }}
-          >
-            {TRUST_BADGES.map((badge, idx) => {
+          <div className={styles.trustBadgesGrid}>
+            {TRUST_BADGES.map((badge) => {
               const Icon = badge.icon;
               return (
-                <div
-                  key={badge.title}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "14px",
-                    paddingRight: idx < TRUST_BADGES.length - 1 ? "20px" : 0,
-                    borderRight:
-                      idx < TRUST_BADGES.length - 1
-                        ? "1px solid rgba(255,255,255,0.06)"
-                        : "none"
-                  }}
-                >
+                <div key={badge.title} className={styles.trustBadgeItem}>
                   <Icon size={22} color="rgba(255,255,255,0.35)" />
                   <div>
                     <p
